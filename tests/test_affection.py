@@ -28,6 +28,7 @@ SPEC.loader.exec_module(plugin_module)
 class FakeHost:
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict]] = []
+        self.rpc_timeouts: list[tuple[str, int | None]] = []
         self.config = {
             "bot.nickname": "麦麦",
             "bot.alias_names": ["小麦"],
@@ -44,6 +45,7 @@ class FakeHost:
         assert method == "cap.call"
         capability, args = payload["capability"], payload["args"]
         self.calls.append((capability, args))
+        self.rpc_timeouts.append((capability, kwargs.get("timeout_ms")))
         if capability == "config.get":
             return {"success": True, "value": self.config.get(args["key"], args["default"])}
         if capability == "llm.generate":
@@ -55,7 +57,7 @@ class FakeHost:
                     self.cancelled_generations += 1
                     raise
             return {"success": True, "response": self.reply, "reasoning": "", "model": "test"}
-        if capability == "send.text":
+        if capability == "send.hybrid":
             return {"success": True, "sent": True, "message_id": "sent-message"}
         raise AssertionError(f"Unexpected capability: {capability}")
 
@@ -322,7 +324,14 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(await self.route_query(query), (True, None, 2))
                 await self.finish_replies()
         self.assertEqual(self.host.count("llm.generate"), 2)
-        self.assertEqual(self.host.count("send.text"), 2)
+        self.assertEqual(self.host.count("send.hybrid"), 2)
+        self.assertEqual(
+            [args["segments"][0] for args in self.host.arguments("send.hybrid")],
+            [
+                {"type": "reply", "data": {"target_message_id": "formal"}},
+                {"type": "reply", "data": {"target_message_id": "casual"}},
+            ],
+        )
         formal, casual = [args["prompt"][0]["content"] for args in self.host.arguments("llm.generate")]
         for prompt in (formal, casual):
             self.assertIn("温柔", prompt)
@@ -425,7 +434,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         for query in cases:
             self.assertEqual(await self.route_query(query), (True, None, 2))
             await self.finish_replies()
-        self.assertEqual(self.host.count("send.text"), 5)
+        self.assertEqual(self.host.count("send.hybrid"), 5)
 
     async def test_host_routing_still_works_when_automatic_scoring_is_disabled(self) -> None:
         data = self.plugin.get_plugin_config_data()
@@ -444,7 +453,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
             )
         self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], -1)
         self.assertEqual(self.host.count("llm.generate"), 0)
-        self.assertEqual(self.host.count("send.text"), 0)
+        self.assertEqual(self.host.count("send.hybrid"), 0)
 
     async def test_query_intercepts_and_generates_once(self) -> None:
         await self.plugin.record_interaction(message("谢谢你", event="thanks"))
@@ -452,7 +461,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result, (True, None, 2))
         await self.finish_replies()
         self.assertEqual(self.host.count("llm.generate"), 1)
-        self.assertEqual(self.host.count("send.text"), 1)
+        self.assertEqual(self.host.count("send.hybrid"), 1)
         generate = self.host.arguments("llm.generate")[0]
         prompt = generate["prompt"][0]["content"]
         self.assertIn("温柔", prompt)
@@ -460,10 +469,24 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("真实好感度 1", prompt)
         self.assertEqual(generate["task_name"], "replyer")
         self.assertEqual(generate["max_tokens"], self.plugin.config.reply.max_tokens)
-        send = self.host.arguments("send.text")[0]
-        self.assertEqual(send["text"], self.host.reply)
+        send = self.host.arguments("send.hybrid")[0]
+        self.assertEqual(
+            send["segments"],
+            [
+                {"type": "reply", "data": {"target_message_id": "query"}},
+                {"type": "text", "data": self.host.reply},
+            ],
+        )
         self.assertEqual(send["stream_id"], "stream-1")
         self.assertTrue(send["sync_to_maisaka_history"])
+
+    async def test_model_rpc_uses_90_second_transport_timeout(self) -> None:
+        await self.plugin.query_affection(message("你喜欢我吗", event="timeout-query"), "stream-1")
+        await self.finish_replies()
+        self.assertEqual(self.host.count("llm.generate"), 1)
+        self.assertEqual([timeout for cap, timeout in self.host.rpc_timeouts if cap == "llm.generate"], [90000])
+        self.assertNotIn("timeout_ms", self.host.arguments("llm.generate")[0])
+        self.assertEqual(self.host.count("send.hybrid"), 1)
 
     async def test_query_cooldown_and_duplicates_still_intercept(self) -> None:
         for event in ("q1", "q1", "q2"):
@@ -472,7 +495,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
             )
             await self.finish_replies()
         self.assertEqual(self.host.count("llm.generate"), 1)
-        self.assertEqual(self.host.count("send.text"), 1)
+        self.assertEqual(self.host.count("send.hybrid"), 1)
 
     async def test_group_needs_name_or_bot_mention(self) -> None:
         for event, kwargs in (
@@ -497,7 +520,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
                 (True, None, 2),
             )
         await self.finish_replies()
-        self.assertEqual(self.host.count("send.text"), 3)
+        self.assertEqual(self.host.count("send.hybrid"), 3)
 
     async def test_non_qq_group_uses_route_account(self) -> None:
         query = message(
@@ -578,6 +601,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         data["affection"]["extra_names"] = ["阿麦"]
         data["affection"]["positive_step"] = 4
         data["reply"]["max_tokens"] = 72
+        data["reply"]["timeout_seconds"] = 60
         self.plugin.set_plugin_config(data)
         await self.plugin.on_config_update("self", data, "2")
         await self.plugin.record_interaction(message("阿麦，谢谢你", group=True, event="new-score"))
@@ -585,6 +609,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         await self.plugin.query_affection(message("阿麦你喜欢我吗", group=True, event="new-query"), "stream-1")
         await self.finish_replies()
         self.assertEqual(self.host.arguments("llm.generate")[0]["max_tokens"], 72)
+        self.assertEqual([timeout for cap, timeout in self.host.rpc_timeouts if cap == "llm.generate"], [60000])
 
     async def test_disabled_plugin_passes_through_and_does_not_record(self) -> None:
         data = self.plugin.get_plugin_config_data()
@@ -614,7 +639,11 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         self.host.generate_gate.set()
         await self.finish_replies()
         self.assertEqual(self.host.count("llm.generate"), 2)
-        self.assertEqual(self.host.count("send.text"), 2)
+        self.assertEqual(self.host.count("send.hybrid"), 2)
+        self.assertEqual(
+            {args["segments"][0]["data"]["target_message_id"] for args in self.host.arguments("send.hybrid")},
+            {"q0", "q1"},
+        )
 
     async def test_unload_cancels_pending_generation_and_closes_store(self) -> None:
         self.host.generate_gate = asyncio.Event()
@@ -623,7 +652,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         await self.plugin.on_unload()
         self.unloaded = True
         self.assertEqual(self.host.cancelled_generations, 1)
-        self.assertEqual(self.host.count("send.text"), 0)
+        self.assertEqual(self.host.count("send.hybrid"), 0)
         self.assertEqual(len(self.plugin._tasks), 0)
         with self.assertRaises(RuntimeError):
             await self.plugin.store.get("qq", "u1", 0)

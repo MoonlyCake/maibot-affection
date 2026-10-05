@@ -84,7 +84,7 @@ class ReplySettings(PluginConfigBase):
     cooldown_seconds: int = Field(default=10, ge=0, description="同一用户查询间隔，重复查询静默接管")
     max_inflight: int = Field(default=4, ge=1, le=32, description="最多同时生成多少条查询回复")
     max_tokens: int = Field(default=160, ge=32, le=2048, description="单条回复的最大输出 Token")
-    timeout_seconds: int = Field(default=30, ge=1, le=120, description="回复任务超时秒数")
+    timeout_seconds: int = Field(default=90, ge=1, le=120, description="回复任务与模型 RPC 的超时秒数")
     persona_max_chars: int = Field(default=1200, ge=100, le=8000, description="人设与说话风格总字符预算")
 
 
@@ -514,11 +514,19 @@ class AffectionPlugin(MaiBotPlugin):
                     ],
                     task_name="replyer",
                     max_tokens=self.config.reply.max_tokens,
+                    timeout_ms=self.config.reply.timeout_seconds * 1000,
                 )
                 if not result["success"] or not result["response"].strip():
                     self.ctx.logger.warning("好感度回复生成失败，stream_id=%s", stream_id)
                     return
-                sent = await self.ctx.send.text(result["response"].strip(), stream_id, sync_to_maisaka_history=True)
+                sent = await self.ctx.send.hybrid(
+                    [
+                        {"type": "reply", "data": {"target_message_id": str(message["message_id"])}},
+                        {"type": "text", "data": result["response"].strip()},
+                    ],
+                    stream_id,
+                    sync_to_maisaka_history=True,
+                )
                 if not sent:
                     self.ctx.logger.warning("好感度回复发送失败，stream_id=%s", stream_id)
         except Exception:

@@ -20,6 +20,13 @@ git clone https://github.com/MoonlyCake/maibot-affection.git plugins/affection
 
 插件使用标准库 SQLite，无需额外数据库服务或模型配置。
 
+## v1.0.2 更新
+
+- 修复模型调用被默认 30 秒 RPC 时限提前中断的问题。`reply.timeout_seconds` 默认改为 **90 秒**，同时控制回复任务总时限与 `llm.generate` 的 RPC 时限。
+- 正式与日常查询统一引用提问的原消息，便于在群聊中对应回复。
+
+已有 `config.toml` 的用户需在 WebUI 或配置文件中将 `reply.timeout_seconds` 改为 `90`；更新代码中的默认值不会覆盖已保存设置。
+
 ## 使用与记分
 
 私聊可直接说：
@@ -61,10 +68,11 @@ git clone https://github.com/MoonlyCake/maibot-affection.git plugins/affection
 
 Hook 的 Host 序列化器明确构造 `raw_message`、`message_info.user_info.user_id`、消息段 `type/data`；文本和语音 `data` 均为字符串。插件按此合约直接读取必填字段，复用 Host 的 Hook／Command 异常隔离。成功的原生 ASR 产生 `[语音: ...]` 包装，仅完整包装会被剥除；其他预填语音文本按原文处理，关闭或失败的 ASR 占位不匹配查询。
 
-`sync_to_maisaka_history=True` 是 `send.text` 的参数，由 Host 内部完成历史同步，所需能力仍为 `send.text`。相关固定源码：
+所有正式与日常查询回复均通过 `send.hybrid` 发送：`reply` 段指向提问的原 `message_id`，`text` 段承载回复正文。`sync_to_maisaka_history=True` 由 Host 内部完成历史同步，所需发送能力为 `send.hybrid`。`llm.generate` 通过 `timeout_ms` 显式传入配置对应的 RPC 时限。相关固定源码：
 
 - [HookSpec 允许改写](https://github.com/Mai-with-u/MaiBot/blob/d64a5d1ba367f316161a7dae84511d9769e77b71/src/chat/message_receive/bot.py#L88)、[消息序列化与恢复](https://github.com/Mai-with-u/MaiBot/blob/d64a5d1ba367f316161a7dae84511d9769e77b71/src/plugin_runtime/host/message_utils.py)。
-- [原生 ASR 格式](https://github.com/Mai-with-u/MaiBot/blob/d64a5d1ba367f316161a7dae84511d9769e77b71/src/chat/message_receive/message.py#L419)、[发送与内部历史同步](https://github.com/Mai-with-u/MaiBot/blob/d64a5d1ba367f316161a7dae84511d9769e77b71/src/plugin_runtime/capabilities/core.py#L322)。
+- [原生 ASR 格式](https://github.com/Mai-with-u/MaiBot/blob/d64a5d1ba367f316161a7dae84511d9769e77b71/src/chat/message_receive/message.py#L419)、[混合消息发送与内部历史同步](https://github.com/Mai-with-u/MaiBot/blob/d64a5d1ba367f316161a7dae84511d9769e77b71/src/plugin_runtime/capabilities/core.py#L439)、[reply 段恢复](https://github.com/Mai-with-u/MaiBot/blob/d64a5d1ba367f316161a7dae84511d9769e77b71/src/plugin_runtime/host/message_utils.py#L276)。
+- [SDK 模型调用参数透传](https://github.com/Mai-with-u/maibot-plugin-sdk/blob/e79989deb26414869ed47e16d9f695a8b891116d/maibot_sdk/capabilities/llm.py#L49)、[能力 RPC 时限](https://github.com/Mai-with-u/maibot-plugin-sdk/blob/e79989deb26414869ed47e16d9f695a8b891116d/maibot_sdk/context.py#L242)。
 
 ## 配置默认值
 
@@ -82,7 +90,7 @@ Hook 的 Host 序列化器明确构造 `raw_message`、`message_info.user_info.u
 | `reply.cooldown_seconds` | `10` | 每用户、每套查询各自的间隔 |
 | `reply.max_inflight` | `4` | 同时生成回复的上限，1～32 |
 | `reply.max_tokens` | `160` | 输出 Token 上限，32～2048 |
-| `reply.timeout_seconds` | `30` | 生成与发送任务的超时，1～120 秒 |
+| `reply.timeout_seconds` | `90` | 回复任务总时限与模型 RPC 时限，1～120 秒 |
 | `reply.persona_max_chars` | `1200` | 缓存人设与风格的总字符预算，100～8000 |
 
 调整 `initial_score` 只影响尚无记录的用户。关闭 `automatic` 后，其他插件仍可通过公开 API 记分。
@@ -123,11 +131,11 @@ result = await self.ctx.api.call(
 python -m unittest discover -s tests -v
 ```
 
-31 项本地测试已通过，覆盖句式边界、群聊称呼、记分、两套查询的独立冷却、事件去重、持久化、并发限制、语音包装边界及组件调用行为。测试使用真实 SDK，只模拟 Host RPC 边界；同时已用官方 Host 的 ManifestValidator、PluginLoader 和 ComponentRegistry 核验清单、加载及 5 个组件的注册。部署后依次检查：
+32 项本地测试已通过，覆盖句式边界、群聊称呼、记分、两套查询的独立冷却、事件去重、持久化、并发限制、语音包装边界、RPC 超时传递及引用原消息。测试使用真实 SDK，只模拟 Host RPC 边界；同时已用官方 Host 的 ManifestValidator、PluginLoader 和 ComponentRegistry 核验清单、加载及 5 个组件的注册。部署后依次检查：
 
 1. WebUI 中插件、两套查询 Command 与记分 Hook 正常加载，日志出现加载完成提示。
-2. 私聊发送 `我的好感度多少？`，确认只有一条符合现有人设的短回复；10 秒内重问，确认静默。
-3. 群聊分别发送无称呼及 @ 麦麦的查询，确认默认仅后者接管；随后发送 `@麦麦 查询好感度`，确认正式回复认真说明分数和关系。被引用、转发的历史正文和第三人称句子保留普通聊天流程。
+2. 私聊发送 `我的好感度多少？`，确认只有一条引用该提问、符合现有人设的短回复；10 秒内重问，确认静默。
+3. 群聊分别发送无称呼及 @ 麦麦的查询，确认默认仅后者接管；随后发送 `@麦麦 查询好感度`，确认正式回复引用该提问并认真说明分数和关系。被引用、转发的历史正文和第三人称句子保留普通聊天流程。
 4. 发送 `谢谢你` 后查询，确认增加 1；冷却内重复感谢不继续加分。重启后确认分数保留。
 5. 修改主程序人设并保存，冷却结束后再问关系，检查回复使用更新后的设定。
 
