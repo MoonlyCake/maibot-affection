@@ -348,15 +348,16 @@ class AffectionPlugin(MaiBotPlugin):
             await self.store.close()
 
     def _message_text(self, message: dict[str, Any]) -> str:
-        segments = message["raw_message"]
         # voice.data 是 Host 完成的转写；不用带 @、引用描述的整体 processed_plain_text。
-        return "".join(
-            segment["data"]
-            if segment["type"] == "text"
-            else segment["data"].removeprefix("[语音: ").removesuffix("]").strip()
-            for segment in segments
-            if segment["type"] in ("text", "voice")
-        )
+        parts = []
+        for segment in message["raw_message"]:
+            if segment["type"] not in ("text", "voice"):
+                continue
+            text = segment["data"]
+            if segment["type"] == "voice" and text.startswith("[语音: ") and text.endswith("]"):
+                text = text[5:-1].strip()
+            parts.append(text)
+        return "".join(parts)
 
     def _addressed(self, message: dict[str, Any], named: bool) -> bool:
         info = message["message_info"]

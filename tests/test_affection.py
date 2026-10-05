@@ -529,6 +529,28 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         await self.finish_replies()
         self.assertEqual(self.host.count("llm.generate"), 1)
 
+    async def test_voice_only_unwraps_complete_host_transcription(self) -> None:
+        for i, (data, expected_text, expected_route) in enumerate(
+            (
+                ("[语音: 你喜欢我吗？]", "你喜欢我吗？", (True, None, 2)),
+                ("你喜欢我吗]", "你喜欢我吗]", None),
+                ("[语音消息]", "[语音消息]", None),
+                ("[语音消息，转录失败]", "[语音消息，转录失败]", None),
+            )
+        ):
+            with self.subTest(voice_data=data):
+                query = message(
+                    "",
+                    user=f"voice-wrap-{i}",
+                    event=f"voice-wrap-{i}",
+                    segments=[{"type": "voice", "data": data}],
+                    processed_plain_text=data,
+                )
+                self.assertEqual(self.plugin._message_text(query), expected_text)
+                self.assertEqual(await self.route_query(query), expected_route)
+                await self.finish_replies()
+        self.assertEqual(self.host.count("llm.generate"), 1)
+
     async def test_bot_config_reload_updates_name_and_persona(self) -> None:
         await self.plugin.on_config_update(
             ON_BOT_CONFIG_RELOAD,
