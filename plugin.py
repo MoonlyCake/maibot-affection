@@ -55,7 +55,10 @@ POSITIVE_RE = re.compile(
     r"你真可爱|你很可爱|喜欢你|我喜欢你|我很喜欢你|我爱你|你帮了我大忙)"
     r"(?:谢谢(?:你)?|辛苦(?:你)?了|你真好)*"
 )
-NEGATIVE_RE = re.compile(r"(?:你(?:真是|就是|是)?(?:垃圾|废物|傻逼|蠢货)|滚(?:开|吧)?|闭嘴)")
+NEGATIVE_RE = re.compile(
+    r"(?:你(?:真是|就是|是)?(?:垃圾|废物|傻逼|蠢货)|滚(?:开|吧)?|闭嘴|"
+    r"我(?:不喜欢|讨厌|恨)你|你(?:真|真的|太|好)?(?:烦|讨厌|恶心)(?:了|死了)?|别烦我)"
+)
 SPACE_PUNCT_RE = re.compile(r"[\s，,：:。！？?!~～]")
 
 
@@ -70,7 +73,8 @@ class AffectionSettings(PluginConfigBase):
     __ui_label__ = "好感度"
 
     initial_score: int = Field(default=0, ge=-100, le=100, description="新用户初始值；0 表示初识")
-    automatic: bool = Field(default=True, description="按明确的感谢、赞美、辱骂记录好感变化")
+    automatic: bool = Field(default=True, description="按指向麦麦的日常交流和明确情绪记录好感变化")
+    interaction_step: int = Field(default=1, ge=0, le=10, description="普通交流加分；设为 0 仅按明确情绪记分")
     positive_step: int = Field(default=1, ge=1, le=10, description="正向互动加分")
     negative_step: int = Field(default=2, ge=1, le=10, description="负向互动扣分")
     score_cooldown_seconds: int = Field(default=300, ge=0, description="同一用户同方向记分间隔，重启后保留")
@@ -125,12 +129,12 @@ class IntentMatcher:
             return "relationship"
         return None
 
-    def delta(self, body: str, positive: int, negative: int) -> int:
-        if POSITIVE_RE.fullmatch(body):
-            return positive
+    def delta(self, body: str, positive: int, negative: int, interaction: int = 0) -> int:
         if NEGATIVE_RE.fullmatch(body):
             return -negative
-        return 0
+        if POSITIVE_RE.fullmatch(body):
+            return positive
+        return interaction
 
 
 def relationship(score: int) -> str:
@@ -354,8 +358,11 @@ class AffectionPlugin(MaiBotPlugin):
             if segment["type"] not in ("text", "voice"):
                 continue
             text = segment["data"]
-            if segment["type"] == "voice" and text.startswith("[语音: ") and text.endswith("]"):
-                text = text[5:-1].strip()
+            if segment["type"] == "voice":
+                if text in ("[语音消息]", "[语音消息，转录失败]"):
+                    continue
+                if text.startswith("[语音: ") and text.endswith("]"):
+                    text = text[5:-1].strip()
             parts.append(text)
         return "".join(parts)
 
@@ -388,15 +395,13 @@ class AffectionPlugin(MaiBotPlugin):
         mode=HookMode.BLOCKING,
         order=HookOrder.NORMAL,
         timeout_ms=4000,
-        description="只对明确指向麦麦的互动本地记分",
+        description="对指向麦麦的普通交流与明确情绪本地记分",
     )
     async def record_interaction(self, message: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         settings = self.config.affection
         if not self.config.plugin.enabled or message.get("is_notify"):
             return {"action": "continue"}
         text = self._message_text(message)
-        if len(text) > 256:
-            return {"action": "continue"}
         body, named = self.matcher.body(text)
         if settings.group_requires_address and not self._addressed(message, named) and body != "/affection":
             return {"action": "continue"}
@@ -404,11 +409,11 @@ class AffectionPlugin(MaiBotPlugin):
             # 排除 Host 的引用描述、@ 展示位置和 ASR 包装，保留用户当前这句话。
             message["processed_plain_text"] = body
             return {"action": "continue", "modified_kwargs": {"message": message}}
-        if not settings.automatic:
+        if not settings.automatic or not body or body.startswith("/"):
             return {"action": "continue"}
-        delta = self.matcher.delta(body, settings.positive_step, settings.negative_step)
+        delta = self.matcher.delta(body, settings.positive_step, settings.negative_step, settings.interaction_step)
         if delta:
-            await self.store.record(
+            result = await self.store.record(
                 message["platform"],
                 str(message["message_info"]["user_info"]["user_id"]),
                 message["session_id"],
@@ -419,6 +424,13 @@ class AffectionPlugin(MaiBotPlugin):
                 settings.score_cooldown_seconds,
                 body,
             )
+            if result["accepted"]:
+                self.ctx.logger.info(
+                    "好感度已记分：platform=%s, user_id=%s, score=%s",
+                    message["platform"],
+                    message["message_info"]["user_info"]["user_id"],
+                    result["score"],
+                )
         return {"action": "continue"}
 
     @Command(

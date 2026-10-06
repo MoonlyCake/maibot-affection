@@ -20,6 +20,12 @@ git clone https://github.com/MoonlyCake/maibot-affection.git plugins/affection
 
 插件使用标准库 SQLite，无需额外数据库服务或模型配置。
 
+## v1.0.3 更新
+
+修复日常聊天与长句感谢长期无法加分的问题：私聊普通文本、群聊 @ 麦麦或以昵称开头的普通文本，默认获得 **+1** 基础交流分，与感谢、夸奖共用 **300 秒**正向冷却。明确负面优先扣分。记分全部本地执行，新增模型调用为 **0**。
+
+新增 `affection.interaction_step`，默认 `1`，范围 `0～10`；设为 `0` 可关闭基础交流分，恢复仅按原情绪短句记分。已有配置缺少该字段时自动使用默认值 `1`。本次升级保留插件 ID、数据库与已有分数，无需 SQL 迁移。
+
 ## v1.0.2 更新
 
 - 修复模型调用被默认 30 秒 RPC 时限提前中断的问题。`reply.timeout_seconds` 默认改为 **90 秒**，同时控制回复任务总时限与 `llm.generate` 的 RPC 时限。
@@ -48,7 +54,9 @@ git clone https://github.com/MoonlyCake/maibot-affection.git plugins/affection
 
 查询由轻量 Hook 提取当前正文，再通过原生 `Command` 的完整句式正则接管，随后停止普通聊天流程，避免重复回复。询问分数时提示模型自然提到真实分数；询问关系时用日常感受表达。@ 位置、引用回复中的当前提问，以及 Host 已完成的语音转写都可处理；被引用、转发的历史内容以及 `他说“你喜欢我吗？”`、`如何提高好感度？`、`把我的好感度改成100` 等句子不触发查询。识别范围是代码中明确列出的中文句式，新增表达可扩展 `SCORE_PHRASES`、`RELATION_PHRASES`。
 
-自动记分采用明确的完整短句：`谢谢你`、`辛苦了`、`你真棒`、`我喜欢你` 等默认 **+1**；明确辱骂、`滚开`、`闭嘴` 等默认 **-2**。群聊记分同样要求指向麦麦。其他消息不改变分数；查询本身也不加分。正向与负向分别有 **300 秒**冷却，冷却时间和分数在重启后保留。
+自动记分包含基础交流与明确情绪两部分：私聊普通文本、群聊 @ 麦麦或以昵称开头的普通文本默认 **+1**，长句感谢也可获得基础交流分。`谢谢你`、`辛苦了`、`你真棒`、`我喜欢你` 等明确完整短句按 `positive_step` 加分，默认 **+1**；明确辱骂、`滚开`、`闭嘴` 等优先按 `negative_step` 扣分，默认 **-2**。
+
+好感度查询、空消息、其他 `/` 命令以及默认配置下群聊未指向麦麦的消息不加基础交流分。基础交流与感谢、夸奖共用同一用户的 **300 秒**正向冷却，负向单独冷却；分数与冷却时间在重启后保留。
 
 关系阶段：`-100～-41 排斥`、`-40～-11 疏远`、`-10～19 初识`、`20～49 熟悉`、`50～79 亲近`、`80～100 信任`。
 
@@ -60,13 +68,13 @@ git clone https://github.com/MoonlyCake/maibot-affection.git plugins/affection
 
 数据库位于 `ctx.paths.data_dir / "affection.sqlite3"`，通常映射到 `data/plugins/com.local.mai-affection/`。使用独立 SQLite 的原因是：分数按身份精确查询，传统数据库可以直接完成；原生 `ctx.db` 仅开放 Host 已注册的数据模型，自定义好感表适合保存在插件专属目录；embedding 和向量检索会增加模型调用与检索开销，此功能无需相似性检索。SQL 在单个工作线程执行，使用 WAL；事件去重、冷却检查和分数更新在同一事务内完成，事务中不等待模型。
 
-`events` 保存已处理事件的去重记录，包括冷却内拒绝的事件，持续保留以阻止旧事件重放；分数查询与事件写入均使用主键。它只记录命中查询或明确记分句式的消息，不保存完整聊天记录。
+`events` 保存已处理事件的去重记录，包括冷却内拒绝的事件，持续保留以阻止旧事件重放；分数查询与事件写入均使用主键。它只记录好感度查询及符合记分条件的消息，不保存完整聊天记录。
 
 ## 消息合约与接管
 
 本插件依赖 MaiBot 1.3.3 的 `chat.receive.after_process` 合约：该 Hook 明确允许 `modified_kwargs` 改写消息，Host 随后反序列化消息并按 `processed_plain_text` 路由原生 Command。仅命中查询时，将这一个字段设为规范化查询正文；`raw_message`、发送者与路由信息继续使用原消息。后续 Hook、会话注册和命令链看到规范化正文，这是让两套 Command 匹配当前提问的有意行为。
 
-Hook 的 Host 序列化器明确构造 `raw_message`、`message_info.user_info.user_id`、消息段 `type/data`；文本和语音 `data` 均为字符串。插件按此合约直接读取必填字段，复用 Host 的 Hook／Command 异常隔离。成功的原生 ASR 产生 `[语音: ...]` 包装，仅完整包装会被剥除；其他预填语音文本按原文处理，关闭或失败的 ASR 占位不匹配查询。
+Hook 的 Host 序列化器明确构造 `raw_message`、`message_info.user_info.user_id`、消息段 `type/data`；文本和语音 `data` 均为字符串。插件按此合约直接读取必填字段，复用 Host 的 Hook／Command 异常隔离。成功的原生 ASR 产生 `[语音: ...]` 包装，仅完整包装会被剥除；其他预填语音文本按原文处理，关闭或失败的 ASR 占位不参与查询和记分。
 
 所有正式与日常查询回复均通过 `send.hybrid` 发送：`reply` 段指向提问的原 `message_id`，`text` 段承载回复正文。`sync_to_maisaka_history=True` 由 Host 内部完成历史同步，所需发送能力为 `send.hybrid`。`llm.generate` 通过 `timeout_ms` 显式传入配置对应的 RPC 时限。相关固定源码：
 
@@ -82,6 +90,7 @@ Hook 的 Host 序列化器明确构造 `raw_message`、`message_info.user_info.u
 | `plugin.config_version` | `"1.0.0"` | 配置格式标识；当前格式未变更 |
 | `affection.initial_score` | `0` | 新用户初始值，-100～100 |
 | `affection.automatic` | `true` | 启用本地自动记分 |
+| `affection.interaction_step` | `1` | 基础交流加分，0～10；0 恢复仅按原情绪短句记分 |
 | `affection.positive_step` | `1` | 正向加分，1～10 |
 | `affection.negative_step` | `2` | 负向扣分，1～10 |
 | `affection.score_cooldown_seconds` | `300` | 每用户、每方向的记分间隔 |
@@ -131,12 +140,12 @@ result = await self.ctx.api.call(
 python -m unittest discover -s tests -v
 ```
 
-32 项本地测试已通过，覆盖句式边界、群聊称呼、记分、两套查询的独立冷却、事件去重、持久化、并发限制、语音包装边界、RPC 超时传递及引用原消息。测试使用真实 SDK，只模拟 Host RPC 边界；同时已用官方 Host 的 ManifestValidator、PluginLoader 和 ComponentRegistry 核验清单、加载及 5 个组件的注册。部署后依次检查：
+39 项本地测试已通过，覆盖基础交流、负面优先、语音占位过滤、句式边界、群聊称呼、记分、两套查询的独立冷却、事件去重、持久化、并发限制、语音包装边界、RPC 超时传递及引用原消息。测试使用真实 SDK，只模拟 Host RPC 边界；同时已用官方 Host 的 ManifestValidator、PluginLoader 和 ComponentRegistry 核验清单、加载及 5 个组件的注册。部署后依次检查：
 
 1. WebUI 中插件、两套查询 Command 与记分 Hook 正常加载，日志出现加载完成提示。
 2. 私聊发送 `我的好感度多少？`，确认只有一条引用该提问、符合现有人设的短回复；10 秒内重问，确认静默。
 3. 群聊分别发送无称呼及 @ 麦麦的查询，确认默认仅后者接管；随后发送 `@麦麦 查询好感度`，确认正式回复引用该提问并认真说明分数和关系。被引用、转发的历史正文和第三人称句子保留普通聊天流程。
-4. 发送 `谢谢你` 后查询，确认增加 1；冷却内重复感谢不继续加分。重启后确认分数保留。
+4. 私聊发送一条普通非命令消息后查询，确认增加 1；300 秒内继续聊天或感谢不重复加分。重启后确认分数保留。
 5. 修改主程序人设并保存，冷却结束后再问关系，检查回复使用更新后的设定。
 
 已按下列源码版本核对开发接口，并进行本地测试。真实 MaiBot 进程、平台适配器和在线 LLM 的完整联调尚未执行；上述部署检查用于完成该验证。
