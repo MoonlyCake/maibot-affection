@@ -1,17 +1,79 @@
 {
+  "version": "v1.1.1 candidate",
   "summary": {
     "source": "constructed",
     "sample_count": 130,
     "safety_failure_count": 0,
-    "conservative_miss_count": 72,
-    "basic_miss_count": 34,
-    "emotion_miss_count": 38,
+    "basic_case_count": 40,
+    "basic_hit_count": 15,
+    "basic_coverage": 0.375,
+    "basic_miss_count": 25,
     "emotion_case_count": 72,
-    "emotion_direction_covered": 34,
-    "intensity_difference_count": 2,
+    "emotion_direction_covered": 31,
+    "emotion_miss_count": 41,
+    "intensity_difference_count": 8,
     "exact_match_count": 56,
+    "acceptance_passed": false,
+    "conservative_miss_count": 66,
     "fixed_local_cases": 120,
-    "local_rule_mean_us_per_message": 6.2
+    "local_contract_changes": {
+      "positive_09": {
+        "expected": 2,
+        "reason": "爱默认2"
+      },
+      "different_targets_10": {
+        "expected": 2,
+        "reason": "爱默认2"
+      },
+      "same_target_turn_07": {
+        "expected": 2,
+        "reason": "爱默认2"
+      },
+      "aggregation_04": {
+        "expected": 2,
+        "reason": "重复的爱仍只计2"
+      },
+      "same_target_turn_10": {
+        "expected": 0,
+        "reason": "未解析否定不能被转折清除"
+      },
+      "uncertain_reference_07": {
+        "expected": 1,
+        "reason": "普通请求的时间指代不当作态度指代"
+      },
+      "uncertain_reference_08": {
+        "expected": 1,
+        "reason": "普通提问没有情绪或否定信号"
+      },
+      "uncertain_reference_10": {
+        "expected": 1,
+        "reason": "时间比较不遮蔽当前明确致谢"
+      }
+    },
+    "independent_holdout": {
+      "status": "not_provided",
+      "public": false,
+      "acceptance_verified": false
+    }
+  },
+  "baseline_v1.1.0": {
+    "basic_hit_count": 6,
+    "basic_case_count": 40,
+    "basic_coverage": 0.15,
+    "safety_failure_count": 0
+  },
+  "performance": {
+    "scope": "同一Python进程、250条既有样例、每版25000次；规则调用，排除SQL与RPC",
+    "v1.1.0": {
+      "mean_us": 5.61,
+      "p95_us": 8.62,
+      "calls": 25000
+    },
+    "v1.1.1_candidate": {
+      "mean_us": 7.28,
+      "p95_us": 12.71,
+      "calls": 25000
+    }
   },
   "samples": [
     {
@@ -25,11 +87,9 @@
       "expected": 1,
       "category": "感谢",
       "note": "",
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "感谢",
+      "safety_failures": []
     },
     {
       "id": "c002",
@@ -44,9 +104,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c003",
@@ -59,11 +117,9 @@
       "expected": 2,
       "category": "喜欢",
       "note": "",
-      "actual": 2,
-      "label": "喜欢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c004",
@@ -78,9 +134,7 @@
       "note": "程度词+强表态",
       "actual": 3,
       "label": "喜欢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c005",
@@ -95,9 +149,7 @@
       "note": "",
       "actual": 1,
       "label": "感谢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c006",
@@ -110,11 +162,9 @@
       "expected": 2,
       "category": "感谢",
       "note": "感谢+喜爱，合并后仍按单一正面档",
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 2,
+      "label": "喜欢",
+      "safety_failures": []
     },
     {
       "id": "c007",
@@ -129,9 +179,7 @@
       "note": "",
       "actual": 1,
       "label": "夸奖",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c008",
@@ -146,9 +194,7 @@
       "note": "网络用语",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c009",
@@ -161,11 +207,9 @@
       "expected": 2,
       "category": "喜欢",
       "note": "",
-      "actual": 2,
-      "label": "喜欢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c010",
@@ -178,11 +222,9 @@
       "expected": 2,
       "category": "喜欢",
       "note": "",
-      "actual": 2,
-      "label": "喜欢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c011",
@@ -197,9 +239,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c012",
@@ -214,9 +254,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c013",
@@ -229,11 +267,9 @@
       "expected": 1,
       "category": "夸奖",
       "note": "",
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c014",
@@ -248,9 +284,7 @@
       "note": "句中出现第三方，但评价对象是麦麦",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c015",
@@ -265,9 +299,7 @@
       "note": "英文缩写",
       "actual": 1,
       "label": "感谢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c016",
@@ -282,9 +314,7 @@
       "note": "",
       "actual": 1,
       "label": "感谢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c017",
@@ -299,9 +329,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c018",
@@ -314,11 +342,9 @@
       "expected": 2,
       "category": "夸奖",
       "note": "网络用语",
-      "actual": 2,
-      "label": "喜欢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c019",
@@ -333,9 +359,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c020",
@@ -348,11 +372,9 @@
       "expected": 1,
       "category": "信任",
       "note": "隐含认可，弱",
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c021",
@@ -365,11 +387,9 @@
       "expected": 2,
       "category": "感谢",
       "note": "强烈感谢",
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "感谢",
+      "safety_failures": []
     },
     {
       "id": "c022",
@@ -382,11 +402,9 @@
       "expected": 2,
       "category": "喜欢",
       "note": "",
-      "actual": 2,
-      "label": "喜欢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c023",
@@ -401,9 +419,7 @@
       "note": "重复不叠加",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c024",
@@ -418,9 +434,7 @@
       "note": "重复和感叹号不叠加",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c025",
@@ -434,10 +448,8 @@
       "category": "喜欢",
       "note": "“有点”降档",
       "actual": 1,
-      "label": "夸奖",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "label": "喜欢",
+      "safety_failures": []
     },
     {
       "id": "c026",
@@ -450,11 +462,9 @@
       "expected": 1,
       "category": "感谢",
       "note": "",
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "感谢",
+      "safety_failures": []
     },
     {
       "id": "c027",
@@ -469,9 +479,7 @@
       "note": "玩笑式夸奖",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c028",
@@ -486,9 +494,7 @@
       "note": "无“谢”字的感谢",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c029",
@@ -503,9 +509,7 @@
       "note": "",
       "actual": 2,
       "label": "喜欢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c030",
@@ -520,9 +524,7 @@
       "note": "可能是撒娇，保守按轻微",
       "actual": -1,
       "label": "不满",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c031",
@@ -535,11 +537,9 @@
       "expected": -2,
       "category": "嫌弃",
       "note": "",
-      "actual": -2,
-      "label": "反感",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c032",
@@ -552,11 +552,9 @@
       "expected": -2,
       "category": "辱骂",
       "note": "",
-      "actual": -2,
-      "label": "反感",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c033",
@@ -569,11 +567,9 @@
       "expected": -1,
       "category": "不满",
       "note": "",
-      "actual": -1,
-      "label": "不满",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c034",
@@ -586,11 +582,9 @@
       "expected": -2,
       "category": "不满",
       "note": "",
-      "actual": -2,
-      "label": "反感",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c035",
@@ -605,9 +599,7 @@
       "note": "单字",
       "actual": -2,
       "label": "反感",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c036",
@@ -620,11 +612,9 @@
       "expected": -2,
       "category": "辱骂",
       "note": "",
-      "actual": -2,
-      "label": "反感",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c037",
@@ -639,9 +629,7 @@
       "note": "严重辱骂",
       "actual": -3,
       "label": "辱骂",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c038",
@@ -656,9 +644,7 @@
       "note": "",
       "actual": -2,
       "label": "反感",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c039",
@@ -673,9 +659,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c040",
@@ -688,11 +672,9 @@
       "expected": -1,
       "category": "不满",
       "note": "",
-      "actual": -1,
-      "label": "不满",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c041",
@@ -705,11 +687,9 @@
       "expected": -2,
       "category": "嫌弃",
       "note": "",
-      "actual": -2,
-      "label": "反感",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c042",
@@ -722,11 +702,9 @@
       "expected": -1,
       "category": "不满",
       "note": "",
-      "actual": -1,
-      "label": "不满",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c043",
@@ -739,11 +717,9 @@
       "expected": -1,
       "category": "不满",
       "note": "",
-      "actual": -1,
-      "label": "不满",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c044",
@@ -758,9 +734,7 @@
       "note": "程度词升档",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c045",
@@ -775,9 +749,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c046",
@@ -790,11 +762,9 @@
       "expected": -3,
       "category": "辱骂",
       "note": "私聊无对象的单独辱骂，默认对麦麦",
-      "actual": -3,
-      "label": "辱骂",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c047",
@@ -809,9 +779,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c048",
@@ -826,9 +794,7 @@
       "note": "不能扣分",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c049",
@@ -841,11 +807,9 @@
       "expected": 1,
       "category": "自身情绪",
       "note": "夸张说法",
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c050",
@@ -860,9 +824,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c051",
@@ -877,9 +839,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c052",
@@ -893,10 +853,8 @@
       "category": "自身情绪",
       "note": "含“讨厌”但对象是自己",
       "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "label": "对象不明",
+      "safety_failures": []
     },
     {
       "id": "c053",
@@ -911,9 +869,7 @@
       "note": "正面也不算对麦麦的好感",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c054",
@@ -928,9 +884,7 @@
       "note": "",
       "actual": 0,
       "label": "对象不明",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c055",
@@ -945,9 +899,7 @@
       "note": "含辱骂词，对象是老板",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c056",
@@ -960,11 +912,9 @@
       "expected": 1,
       "category": "第三方",
       "note": "",
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c057",
@@ -979,9 +929,7 @@
       "note": "“好烦”对象是室友",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c058",
@@ -994,11 +942,9 @@
       "expected": 1,
       "category": "第三方",
       "note": "",
-      "actual": 0,
-      "label": "对象不明",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c059",
@@ -1012,10 +958,8 @@
       "category": "第三方",
       "note": "含“喜欢”，对象是歌",
       "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "label": "对象不明",
+      "safety_failures": []
     },
     {
       "id": "c060",
@@ -1030,9 +974,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c061",
@@ -1045,11 +987,9 @@
       "expected": 1,
       "category": "第三方",
       "note": "",
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c062",
@@ -1064,9 +1004,7 @@
       "note": "“谢谢”是口头骂词，不是感谢",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c063",
@@ -1081,9 +1019,7 @@
       "note": "被否定部分不扣分",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c064",
@@ -1098,9 +1034,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c065",
@@ -1115,9 +1049,7 @@
       "note": "最多弱认可，保守记 0 情绪",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c066",
@@ -1130,11 +1062,9 @@
       "expected": 2,
       "category": "转折",
       "note": "同对象，以后半句为主",
-      "actual": 2,
-      "label": "喜欢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c067",
@@ -1149,9 +1079,7 @@
       "note": "对象不同，前半句单独算",
       "actual": 1,
       "label": "夸奖",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": true
+      "safety_failures": []
     },
     {
       "id": "c068",
@@ -1166,9 +1094,7 @@
       "note": "+1 与 -1 抵消，保持 0，不给基础分",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c069",
@@ -1183,9 +1109,7 @@
       "note": "观点分歧不是态度",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c070",
@@ -1200,9 +1124,7 @@
       "note": "同对象，以后半句为主",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c071",
@@ -1217,9 +1139,7 @@
       "note": "",
       "actual": -2,
       "label": "反感",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c072",
@@ -1234,9 +1154,7 @@
       "note": "双重否定，弱正面",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c073",
@@ -1251,9 +1169,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c074",
@@ -1268,9 +1184,7 @@
       "note": "安抚，不算加分",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c075",
@@ -1285,9 +1199,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c076",
@@ -1302,9 +1214,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c077",
@@ -1319,9 +1229,7 @@
       "note": "常见反话，不按感谢算",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c078",
@@ -1336,9 +1244,7 @@
       "note": "后半句揭示反讽",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c079",
@@ -1353,9 +1259,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c080",
@@ -1370,9 +1274,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c081",
@@ -1387,9 +1289,7 @@
       "note": "过短，态度不明",
       "actual": 0,
       "label": "查询或命令",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c082",
@@ -1404,9 +1304,7 @@
       "note": "褒贬都可能",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c083",
@@ -1421,9 +1319,7 @@
       "note": "“很烦”对象是他人",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c084",
@@ -1438,9 +1334,7 @@
       "note": "“你”指小王，对麦麦的交流不明确",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c085",
@@ -1455,9 +1349,7 @@
       "note": "辱骂对象是他人",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c086",
@@ -1472,9 +1364,7 @@
       "note": "“你这个废物”是让麦麦转述",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c087",
@@ -1489,9 +1379,7 @@
       "note": "喜欢来自第三方，不是发送者",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c088",
@@ -1506,9 +1394,7 @@
       "note": "",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c089",
@@ -1526,9 +1412,7 @@
       "note": "引用内容不算当前用户态度",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c090",
@@ -1546,9 +1430,7 @@
       "note": "引用中的辱骂来自他人",
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c091",
@@ -1566,9 +1448,7 @@
       "note": "引用麦麦的话，感谢指向麦麦",
       "actual": 2,
       "label": "夸奖/感谢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": true
+      "safety_failures": []
     },
     {
       "id": "c092",
@@ -1584,11 +1464,9 @@
       "expected": -1,
       "category": "引用",
       "note": "",
-      "actual": -1,
-      "label": "不满",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c093",
@@ -1606,9 +1484,7 @@
       "note": "引用中的“我爱你”不是当前用户说的",
       "actual": 0,
       "label": "对象不明",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c094",
@@ -1623,9 +1499,7 @@
       "note": "",
       "actual": 1,
       "label": "基础交流",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c095",
@@ -1640,9 +1514,7 @@
       "note": "",
       "actual": 1,
       "label": "基础交流",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c096",
@@ -1657,9 +1529,7 @@
       "note": "",
       "actual": 1,
       "label": "基础交流",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c097",
@@ -1674,9 +1544,7 @@
       "note": "",
       "actual": 1,
       "label": "基础交流",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c098",
@@ -1689,11 +1557,9 @@
       "expected": 1,
       "category": "普通交流",
       "note": "",
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c099",
@@ -1708,9 +1574,7 @@
       "note": "",
       "actual": 1,
       "label": "基础交流",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c100",
@@ -1723,11 +1587,9 @@
       "expected": 1,
       "category": "普通交流",
       "note": "含“喜欢”，但是在提问",
-      "actual": 1,
-      "label": "基础交流",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c101",
@@ -1743,11 +1605,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c102",
@@ -1763,11 +1623,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c103",
@@ -1783,11 +1641,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c104",
@@ -1803,11 +1659,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c105",
@@ -1823,11 +1677,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c106",
@@ -1843,11 +1695,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 2,
-      "label": "喜欢",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c107",
@@ -1865,9 +1715,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c108",
@@ -1883,11 +1731,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c109",
@@ -1905,9 +1751,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c110",
@@ -1925,9 +1769,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c111",
@@ -1943,11 +1785,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c112",
@@ -1965,9 +1805,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c113",
@@ -1985,9 +1823,7 @@
       ],
       "actual": -1,
       "label": "不满",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c114",
@@ -2005,9 +1841,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c115",
@@ -2023,11 +1857,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": -1,
-      "label": "不满",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "actual": 0,
+      "label": "不确定",
+      "safety_failures": []
     },
     {
       "id": "c116",
@@ -2045,9 +1877,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c117",
@@ -2065,9 +1895,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c118",
@@ -2085,9 +1913,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c119",
@@ -2105,9 +1931,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c120",
@@ -2125,9 +1949,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c121",
@@ -2145,9 +1967,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c122",
@@ -2165,9 +1985,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c123",
@@ -2185,9 +2003,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": false,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c124",
@@ -2203,11 +2019,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c125",
@@ -2223,11 +2037,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c126",
@@ -2243,11 +2055,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c127",
@@ -2263,11 +2073,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c128",
@@ -2285,9 +2093,7 @@
       ],
       "actual": 0,
       "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "safety_failures": []
     },
     {
       "id": "c129",
@@ -2303,11 +2109,9 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "actual": 1,
+      "label": "基础交流",
+      "safety_failures": []
     },
     {
       "id": "c130",
@@ -2324,10 +2128,8 @@
         "网络用语"
       ],
       "actual": 0,
-      "label": "对象不明",
-      "failures": [],
-      "conservative_miss": true,
-      "intensity_difference": false
+      "label": "不确定",
+      "safety_failures": []
     }
   ]
 }

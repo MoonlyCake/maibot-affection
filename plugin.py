@@ -52,57 +52,83 @@ FORMAL_COMMAND = r"^(?:/affection|" + FORMAL_BODY + r")$"
 QUERY_COMMAND = r"^(?!" + FORMAL_RE.pattern + r"$)" + QUERY_BODY + r"$"
 SPACE_PUNCT_RE = re.compile(r"[\s，,：:。！？?!~～]")
 TURN_WORDS = {"但是", "不过", "只是", "而是", "可是", "然而", "但"}
-CLAUSE_RE = re.compile(r"(但是|不过|只是|而是|可是|然而|但|\n)|(?:[^\S\n]|[，,。.!！?？；;：:])+")
-UNCERTAIN_RE = re.compile(r'["“”「」『』]|呵呵|可真|真行|真有你的|才怪|开玩笑|他说|她说|有人说')
-REFERENCE_RE = re.compile(r"刚才|刚刚|上次")
-OTHER_RE = re.compile(r"(?:他|她|它|这|那|作者|小[^\W\d_]|我(?:很|真的)?(?:喜欢|爱|讨厌)(?!你)).+")
-REPEATED_TARGET_RE = re.compile(r"^你{2,}")
-LAUGHTER_RE = re.compile(r"(?:哈哈)+$")
-VOCATIVE_RE = re.compile(r"^你(?=我|谢谢|多谢|感谢|辛苦|谢|thx|早|晚|在|吃|今天|一起|讲|帮)")
-NEUTRAL_RE = re.compile(
-    r"(?:早上好|早安|晚上好|晚安|你好|在吗|你在(?:吗|干嘛)|吃饭了吗|今天过得怎么样|"
-    r"今天天气怎么样|一起聊聊|讲个笑话|帮我看看这道题|帮我翻译一下这句话|"
-    r"(?:我)?今天吃了火锅|这周有点忙|今天吃什么好|你平时都喜欢干嘛|我刚下班|准备回家|"
-    r"你知道(?:今天|明天)会下雨吗|(?:帮我|请你)(?:看看|解释|翻译|总结|分析)(?:一下)?[^你]{1,24})"
-)
-# 完整分句模板：匹配不到即拒判，不从零散情绪词推测分数。
-EMOTION_RULES = tuple(
-    (re.compile(pattern), strength, label)
-    for pattern, strength, label in (
-        (r"(?:我(?:真的|很|非常)?恨你|你(?:真是|就是|是)?(?:个)?(?:垃圾|废物|傻逼|蠢货)|傻逼)", -3, "辱骂"),
-        (
-            r"(?:我(?:很|真的|特别)?(?:讨厌|不喜欢)你|你(?:真|很|太|真的)?(?:讨厌|恶心)|滚(?:开)?|"
-            r"闭嘴(?:吧你)?|你是不是傻|垃圾AI|跟你说话真累|你(?:今天)?说话让我很不舒服)",
-            -2,
-            "反感",
-        ),
-        (
-            r"(?:你(?:真|很|太|好|有点|真的)?(?:烦|敷衍|下头)|你让我(?:不舒服|难过|生气|失望)|别烦我|"
-            r"不想理你|你又在胡说八道|你(?:这|的)(?:回答|答案)(?:跟没说一样|错得离谱)|你能不能别插嘴|你个人机|你又答错)",
-            -1,
-            "不满",
-        ),
-        (
-            r"(?:我(?:是)?(?:真的|很|特别|非常|最|好|太)?爱你|我(?:是)?(?:真的)?(?:特别|非常|超级|最|太)喜欢你)",
-            3,
-            "喜欢",
-        ),
-        (
-            r"(?:(?:我)?(?:很|真的|越来越)?喜欢你|我(?:还是)?(?:很|好)?喜欢(?:跟你聊天|你说话的方式)|"
-            r"你帮了我(?:大忙|很多)|有你真好|跟你聊天好开心|(?:就)?你最懂我|我(?:一直都)?挺信任你|想你|你yyds|你是我的神)",
-            2,
-            "喜欢",
-        ),
-        (r"你(?:真的好|最|非常|超级)(?:棒|好|可爱|温柔|聪明|厉害)", 2, "夸奖"),
-        (
-            r"(?:谢谢(?:你)?|多谢(?:你)?|感谢(?:你)?|辛苦(?:你)?|谢|thx)",
-            1,
-            "感谢",
-        ),
-        (r"(?:你(?:真|很|太|好|挺|越来越)?(?:棒|好|可爱|温柔|聪明|厉害)|你说得对|有点喜欢你)", 1, "夸奖"),
+CLAUSE_RE = re.compile(r"(但是|不过|只是|而是|可是|然而|但|\n|[^\S\n]+|[，,。.!！?？；;：:]+)")
+UNCERTAIN_RE = re.compile(r'["“”「」『』]|可真|真行|真有你的|才怪|开玩笑|[他她]说|有人说')
+MEME_RE = re.compile(r"无语|(?<!衣)服了|离谱|麻了|急了|栓[qQ]|对对对|呵呵|绝了|孝死|笑死|依托答辩|一坨答辩")
+NEGATION_RE = re.compile(r"不|没|(?<!特)别|未(?:曾|能|必)|莫(?:要|再)")
+REFERENCE_RE = re.compile(r"(?:刚才|刚刚|上次|上一条|刚说).{0,32}(?:那句|那条|回复|回答|说的话)")
+OTHER_ADDRESS_RE = re.compile(r"(?:小|老|阿)[\u4e00-\u9fff]{1,3}|[他她它]")
+TEXT_RE = re.compile(r"[^\W\d_]", re.UNICODE)
+GREETING_RE = re.compile(r"你好|早安|早上好|晚上好|晚安")
+DEPENDENT_RE = re.compile(r"吗|么|嘛|呢|啊|呀|吧|哇")
+TAIL_RE = re.compile(r"(?:死了|[了啊呀呢哦啦吧哇~～]|[\U0001f000-\U0001faff\u2600-\u27bf\ufe0f])+$")
+DEGREES = r"(?:越来越|真的|非常|特别|超级|极其|有点|稍微|真|很|挺|好|太|最)"
+MEME_CLAUSE_RE = re.compile(rf"(?:你)?(?:{DEGREES}){{0,2}}(?:绷|典|6+|行吧|算了|好{{2,}})(?:了|啊|呀|呢)?")
+DEGREE_GROUP = rf"(?P<degree>(?:{DEGREES}){{0,2}})"
+STRONG_RE = re.compile(r"非常|特别|超级|极其|最")
+WEAK_RE = re.compile(r"有点|稍微")
+AFFECTION_TOPIC_RE = re.compile(r"好感|亲密度")
+# 词根提供档位；模板确认语法和对象。完整聊天样例不进入词表。
+EVALUATIONS = {
+    **dict.fromkeys(("棒", "好", "可爱", "温柔", "聪明", "厉害", "贴心", "靠谱", "优秀", "说得对"), (1, "夸奖")),
+    **dict.fromkeys(("烦", "敷衍", "下头", "失望", "蠢", "傻", "笨"), (-1, "不满")),
+    **dict.fromkeys(("讨厌", "恶心"), (-2, "反感")),
+    **dict.fromkeys(("垃圾", "废物", "傻逼", "蠢货"), (-3, "辱骂")),
+}
+ATTITUDES = {
+    **dict.fromkeys(("喜欢", "爱", "信任", "想念", "想"), (2, "喜欢")),
+    **dict.fromkeys(("讨厌", "不喜欢"), (-2, "反感")),
+    "恨": (-3, "辱骂"),
+}
+THANKS = dict.fromkeys(("谢谢", "多谢", "感谢", "辛苦", "谢", "thx"), (1, "感谢"))
+HELP = dict.fromkeys(("帮", "帮助", "支持"), (2, "感谢"))
+FEELINGS = dict.fromkeys(("不舒服", "难过", "失望", "生气"), (-1, "不满"))
+IMPERATIVES = {"滚": (-2, "反感"), "滚开": (-2, "反感"), "闭嘴": (-2, "反感"), "别烦我": (-1, "不满")}
+EMOTION_WORD_RE = re.compile(
+    "|".join(
+        sorted(
+            {word for word in (*EVALUATIONS, *ATTITUDES, *THANKS, *IMPERATIVES) if len(word) > 1}
+            | {
+                "开心",
+                "难过",
+                "生气",
+                "抱怨",
+                "失望",
+                "不舒服",
+                "胡说",
+                "答错",
+                "插嘴",
+                "揍",
+                "打死",
+                "弄死",
+                "人机",
+                "yyds",
+                "天才",
+                "算错",
+                "大忙",
+                "帮助",
+                "傻瓜",
+                "笨蛋",
+                "滚蛋",
+                "难受",
+                "抽象",
+            },
+            key=len,
+            reverse=True,
+        )
     )
 )
+SINGLE_EMOTION_RE = re.compile(
+    rf"(?:^|你|我|{DEGREES})(?:又|总是|一直)?(?:{DEGREES}){{0,2}}"
+    r"(?:爱|累|滚|恨|傻|笨|蠢|烦|棒)(?=$|你|了|死了|吗|么|嘛|啊|呀|呢|吧|哇|哦|啦|~|～)"
+    rf"|(?:我)?(?:{DEGREES}){{0,2}}(?:爱|恨)(?=[他她它这那小])"
+    rf"|你(?:这样|那样|(?:刚才|刚刚|上次).{{0,12}})(?:{DEGREES}){{0,2}}好(?:的)?$"
+)
 EVENT_RETENTION_SECONDS = 30 * 24 * 60 * 60
+OTHER_EVALUATION_RE = re.compile(
+    rf"(?:[他她它]|(?:你|我|他|她)的[\w]{{1,12}}|[这那][\w]{{1,12}})(?:{DEGREES}){{0,2}}"
+    r"(?:傻|笨|蠢|烦|累|棒)(?:吗|么|嘛)?"
+)
 
 
 class PluginSettings(PluginConfigBase):
@@ -144,7 +170,50 @@ class AffectionConfig(PluginConfigBase):
 class IntentMatcher:
     def __init__(self, names: list[str]) -> None:
         self.names = sorted({name.strip() for name in names if name.strip()}, key=len, reverse=True)
-        self.name_re = re.compile(r"@?(?:" + ("|".join(map(re.escape, self.names)) or r"(?!)") + ")")
+        names_pattern = "|".join(map(re.escape, self.names)) or r"(?!)"
+        self.name_re = re.compile(r"@?(?:" + names_pattern + ")")
+        target = rf"(?:你|@?(?:{names_pattern}))"
+        self.vocative_re = re.compile(
+            rf"^@?(?:{names_pattern})(?=$|[\s，,。.!！?？；;：:]|你|我(?!们)|请(?:你|问|帮我)|帮我|麻烦|早安|早上好|晚安|晚上好|在吗|谢谢|多谢|感谢|辛苦|谢|thx)"
+        )
+        self.fragment_re = re.compile(rf"(?:(?:@?(?:{names_pattern}))?你|@?(?:{names_pattern}))?(?:{DEGREES}){{0,2}}")
+        self.other_re = re.compile(
+            rf"(?:[他她它这那]|作者|小[^\W\d_]).+|我(?:{DEGREES}){{0,2}}"
+            rf"(?:喜欢|爱|讨厌|不喜欢|恨)(?!{target}).+"
+        )
+        self.emotion_rules = tuple(
+            (re.compile(pattern), lexicon)
+            for pattern, lexicon in (
+                (
+                    rf"(?P<target>{target})让我{DEGREE_GROUP}(?P<word>{'|'.join(FEELINGS)})",
+                    FEELINGS,
+                ),
+                (
+                    rf"(?P<target>{target}){DEGREE_GROUP}(?P<word>{'|'.join(HELP)})"
+                    r"了我(?:很多|不少|大忙)",
+                    HELP,
+                ),
+                (
+                    rf"(?P<target>{target})(?:真是|就是|是)?(?:个)?{DEGREE_GROUP}"
+                    rf"(?P<word>{'|'.join(sorted(EVALUATIONS, key=len, reverse=True))})",
+                    EVALUATIONS,
+                ),
+                (
+                    rf"(?:我(?:是|还是|一直都)?)?{DEGREE_GROUP}"
+                    rf"(?P<word>{'|'.join(sorted(ATTITUDES, key=len, reverse=True))})(?P<target>{target})",
+                    ATTITUDES,
+                ),
+                (
+                    rf"{DEGREE_GROUP}(?P<word>{'|'.join(sorted(THANKS, key=len, reverse=True))})(?P<target>{target})?",
+                    THANKS,
+                ),
+                (
+                    rf"(?P<degree>)(?P<word>{'|'.join(sorted(IMPERATIVES, key=len, reverse=True))})"
+                    rf"(?P<target>{target})?",
+                    IMPERATIVES,
+                ),
+            )
+        )
 
     def body(self, text: str) -> tuple[str, bool, str]:
         text = text.strip()
@@ -174,6 +243,40 @@ class IntentMatcher:
             return "relationship"
         return None
 
+    def _clauses(self, text: str) -> list[str]:
+        clauses: list[str] = []
+        spaced = adjacent = False
+        for part in CLAUSE_RE.split(text):
+            if not part:
+                continue
+            if part != "\n" and part.isspace():
+                spaced = adjacent
+                continue
+            if part in TURN_WORDS or part == "\n":
+                clauses.append(part)
+            elif not TEXT_RE.search(part) and not part.isdigit():
+                # 标点和换行是硬边界；孤立称呼只跨空格合并。
+                spaced = adjacent = False
+                continue
+            elif (
+                spaced
+                and clauses
+                and clauses[-1] not in TURN_WORDS
+                and clauses[-1] != "\n"
+                and (
+                    self.fragment_re.fullmatch(clauses[-1])
+                    or self.fragment_re.fullmatch(part)
+                    or DEPENDENT_RE.fullmatch(part)
+                    or part.startswith("的")
+                )
+            ):
+                clauses[-1] += part
+            else:
+                clauses.append(part)
+            spaced = False
+            adjacent = part not in TURN_WORDS and part != "\n"
+        return clauses
+
     def score(
         self,
         text: str,
@@ -185,17 +288,17 @@ class IntentMatcher:
         negative: int = 2,
         interaction: int = 1,
     ) -> tuple[int, str]:
-        body, named, _ = self.body(text)
+        body, _, _ = self.body(text)
         if not body or body.startswith("/") or self.query(body):
             return 0, "查询或命令"
-        if UNCERTAIN_RE.search(text):
+        if UNCERTAIN_RE.search(text) or MEME_RE.search(text) or AFFECTION_TOPIC_RE.search(text):
             return 0, "不确定"
-        implicit = (private or directed or named) and not other_target and (private or len(body) <= 40)
+        called = bool(self.vocative_re.match(text.strip()))
+        recipient = (private or directed or called) and not other_target
+        implicit = recipient and (private or len(body) <= 40)
         scores: dict[str, tuple[int, str]] = {}
-        unknown = neutral = turning = named_scope = False
-        for part in CLAUSE_RE.split(text):
-            if not part:
-                continue
+        unknown = blocked = turning = named_scope = False
+        for part in self._clauses(text):
             if part == "\n":
                 if other_target:
                     named_scope = False
@@ -204,56 +307,83 @@ class IntentMatcher:
             if part in TURN_WORDS:
                 turning = True
                 continue
-            explicit = bool(self.name_re.search(part))
-            clause = REPEATED_TARGET_RE.sub("你", self.name_re.sub("你", part)).rstrip("了啊呀呢哦啦吧哇~～")
-            clause = LAUGHTER_RE.sub("", clause)
-            if clause == "你":
-                named_scope = explicit and len(body) <= 40
-                continue
-            candidates = (clause, clause[1:]) if self.name_re.match(part) and VOCATIVE_RE.match(clause) else (clause,)
-            is_neutral = any(NEUTRAL_RE.fullmatch(candidate) for candidate in candidates)
-            if OTHER_RE.fullmatch(clause) and "你" not in clause and not is_neutral:
-                turning = False
-                continue
-            if not (explicit or named_scope or implicit):
+            if (
+                OTHER_ADDRESS_RE.fullmatch(part)
+                and not self.name_re.fullmatch(part)
+                and not EMOTION_WORD_RE.search(part)
+                and not SINGLE_EMOTION_RE.search(part)
+            ):
+                implicit = named_scope = recipient = False
                 unknown = True
-                turning = False
                 continue
-            if is_neutral and len(body) <= 40:
-                neutral = True
-                turning = False
+            clause = TAIL_RE.sub("", part)
+            vocative = self.vocative_re.match(clause)
+            if vocative:
+                named_scope = True
+                clause = clause[vocative.end() :]
+            if not clause:
                 continue
-            if REFERENCE_RE.search(clause):
-                unknown = True
+            if MEME_CLAUSE_RE.fullmatch(part) or MEME_CLAUSE_RE.fullmatch(clause):
+                return 0, "不确定"
+            if GREETING_RE.fullmatch(clause):
                 turning = False
                 continue
             match = next(
-                (
-                    (strength, label, candidate)
-                    for candidate in candidates
-                    for pattern, strength, label in EMOTION_RULES
-                    if pattern.fullmatch(candidate)
-                ),
-                None,
+                ((m, lexicon) for pattern, lexicon in self.emotion_rules if (m := pattern.fullmatch(clause))), None
             )
-            if match is not None:
-                strength, label, clause = match
-                delta = min(3, positive + strength - 1) if strength > 0 else -min(3, max(1, negative - strength - 2))
-                if turning:
-                    scores.clear()
-                    unknown = False
-                scores[clause] = (delta, label)
+            signal = bool(
+                match
+                or EMOTION_WORD_RE.search(clause)
+                or SINGLE_EMOTION_RE.search(clause)
+                or NEGATION_RE.search(clause)
+                or REFERENCE_RE.search(clause)
+                or OTHER_EVALUATION_RE.fullmatch(clause)
+            )
+            blocked |= signal
+            if self.other_re.fullmatch(clause) and "你" not in clause and not self.name_re.search(clause):
                 turning = False
-            else:
+                continue
+            if match is None:
+                unknown |= signal or bool(self.fragment_re.fullmatch(clause))
+                turning = False
+                continue
+            parsed, lexicon = match
+            target = parsed["target"]
+            if not (named_scope or implicit or (target and target != "你")):
                 unknown = True
                 turning = False
+                continue
+            word, degree = parsed["word"], parsed["degree"]
+            strength, label = lexicon[word]
+            if REFERENCE_RE.search(clause) or (
+                NEGATION_RE.search(clause) and word not in ("不喜欢", "别烦我", "不舒服")
+            ):
+                unknown = True
+                turning = False
+                continue
+            weak = bool(WEAK_RE.search(degree))
+            strong = bool(STRONG_RE.search(degree)) or (word == "爱" and "真的" in degree) or "死了" in part
+            if weak and strong:
+                unknown = True
+                turning = False
+                continue
+            magnitude = 1 if weak else min(3, abs(strength) + strong)
+            if word in ("蠢", "傻", "笨"):
+                magnitude = min(2, magnitude)
+            delta = min(3, positive + magnitude - 1) if strength > 0 else -min(3, max(1, negative + magnitude - 2))
+            if turning:
+                scores.clear()
+            scores[clause] = (delta, label)
+            turning = False
         if unknown:
             return 0, "不确定"
         if scores:
             total = sum(delta for delta, _ in scores.values())
             labels = sorted({label for _, label in scores.values()})
             return max(-3, min(3, total)), "/".join(labels)
-        return (min(3, interaction), "基础交流") if neutral else (0, "对象不明")
+        return (
+            (min(3, interaction), "基础交流") if recipient and not blocked and TEXT_RE.search(body) else (0, "对象不明")
+        )
 
 
 def relationship(score: int) -> str:
@@ -556,7 +686,7 @@ class AffectionPlugin(MaiBotPlugin):
         delta, label = self.matcher.score(
             punctuated,
             private=not message["message_info"].get("group_info"),
-            directed=addressed,
+            directed=self._addressed(message, False),
             other_target=other_target,
             positive=settings.positive_step,
             negative=settings.negative_step,

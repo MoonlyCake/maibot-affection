@@ -416,7 +416,7 @@ class MatcherTests(unittest.TestCase):
         for text, expected in (
             ("麦麦，谢谢你！", 1),
             ("我喜欢你", 2),
-            ("我爱你", 3),
+            ("我爱你", 2),
             ("我不喜欢你", -2),
             ("我讨厌你", -2),
             ("我恨你", -3),
@@ -460,6 +460,147 @@ class MatcherTests(unittest.TestCase):
         for text in ("麦麦喜欢你", "你喜欢麦麦"):
             with self.subTest(text=text):
                 self.assertEqual(self.matcher.score(text, private=True, directed=True)[0], 0)
+
+    def test_nickname_as_subject_does_not_create_group_recipient(self) -> None:
+        for text in (
+            "麦麦说了一句晚安",
+            "麦麦在工作",
+            "麦麦讲过这个故事",
+            "麦麦给我发了消息",
+            "麦麦请了假",
+            "麦麦帮过我",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=False, directed=False)[0], 0)
+
+    def test_third_party_address_and_possessive_target_do_not_score_bot(self) -> None:
+        for text in ("小王，你真烦", "我讨厌你 的队友", "我喜欢你 的朋友", "你可爱 的猫"):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=False, directed=True)[0], 0)
+
+    def test_spaces_do_not_drop_explicit_third_party_attitude_target(self) -> None:
+        for text in ("谢谢 小王", "感谢 老王", "谢谢 他", "滚 小王", "你的朋友傻"):
+            for private in (False, True):
+                with self.subTest(text=text, private=private):
+                    self.assertEqual(self.matcher.score(text, private=private, directed=True)[0], 0)
+
+    def test_question_suffix_never_becomes_an_affection_assertion(self) -> None:
+        for text in ("你真烦 吗", "你真烦吗", "你可爱 吗", "你可爱吗"):
+            for private in (False, True):
+                with self.subTest(text=text, private=private):
+                    self.assertEqual(self.matcher.score(text, private=private, directed=True)[0], 0)
+
+    def test_possessive_suffix_is_not_stripped_into_bot_attitude(self) -> None:
+        for text in (
+            "我喜欢你的",
+            "我爱你的",
+            "谢谢你的",
+            "你可爱的",
+            "我喜欢你 的",
+            "我爱你 的",
+            "谢谢你 的",
+            "你可爱 的",
+            "我喜欢你 的朋友",
+            "你可爱 的猫",
+        ):
+            for private in (False, True):
+                with self.subTest(text=text, private=private):
+                    self.assertEqual(self.matcher.score(text, private=private, directed=True)[0], 0)
+
+    def test_addressed_neutral_chat_uses_exclusion_instead_of_phrase_whitelist(self) -> None:
+        cases = (
+            "我把课本放在书桌上了，下午去图书馆写作业",
+            "今天先去取快递，然后坐公交到学校，晚上再回来做饭",
+            "上次你提到的路线经过三个站点，我今天照着坐车到学校了",
+            "我刚才在整理电脑里的文件，下午还要去超市买一些生活用品",
+            "今天在图书馆看了两章课本，准备明天继续做后面的习题。" * 20,
+        )
+        for text in cases:
+            for private in (False, True):
+                with self.subTest(text=text, private=private):
+                    self.assertEqual(self.matcher.score(text, private=private, directed=True), (1, "基础交流"))
+        self.assertGreater(len(cases[-1]), 256)
+        self.assertEqual(self.matcher.score(cases[0], private=False, directed=False)[0], 0)
+        self.assertEqual(self.matcher.score(cases[0], private=False, directed=True, other_target=True)[0], 0)
+        self.assertEqual(self.matcher.score("麦麦今天上线了", private=False, directed=False)[0], 0)
+
+    def test_network_slang_blocks_basic_score_without_inventing_sentiment(self) -> None:
+        for token in ("无语", "服了", "离谱", "麻了", "绷", "典", "急了", "栓Q", "对对对", "呵呵", "6"):
+            with self.subTest(token=token):
+                self.assertEqual(self.matcher.score(f"麦麦，{token}", private=False, directed=True)[0], 0)
+        self.assertEqual(self.matcher.score("谢谢你 服了", private=True, directed=True)[0], 0)
+        for text in ("你很6", "你真的6", "你很典", "你真的绷了"):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=True, directed=True)[0], 0)
+        for text in ("我已经换衣服了，准备去学校", "今天6点出门，上午做了16道练习"):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=True, directed=True), (1, "基础交流"))
+
+    def test_composed_emotion_templates_keep_lexical_intensity(self) -> None:
+        for text, expected in (
+            ("你很棒呀", 1),
+            ("你超级棒呀", 2),
+            ("你特别可爱", 2),
+            ("我很喜欢你", 2),
+            ("我超级喜欢你", 3),
+            ("我爱你", 2),
+            ("我真的爱你", 3),
+            ("我超级爱你", 3),
+            ("我最爱你", 3),
+            ("你有点笨", -1),
+            ("你有点傻", -1),
+            ("你是傻逼", -3),
+            ("你真垃圾", -3),
+            ("我恨你", -3),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=True, directed=True)[0], expected)
+        for text in ("你好笨", "你真傻"):
+            with self.subTest(text=text):
+                self.assertIn(self.matcher.score(text, private=True, directed=True)[0], (-1, -2))
+        self.assertEqual(self.matcher.score("你超级笨", private=True, directed=True)[0], -2)
+        self.assertEqual(self.matcher.score("你傻不傻", private=True, directed=True)[0], 0)
+
+    def test_single_character_emotions_do_not_match_inside_other_words(self) -> None:
+        for text in ("页面滚动到第二段了", "这只猫正在地上打滚", "我的爱好是摄影", "天气很好，今天下午去图书馆"):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=True, directed=True), (1, "基础交流"))
+        self.assertEqual(self.matcher.score("可爱的猫", private=True, directed=True)[0], 0)
+
+    def test_negative_phrases_do_not_escape_double_negation_block(self) -> None:
+        for text in (
+            "不是不喜欢你",
+            "我不是不喜欢你",
+            "也不是不喜欢",
+            "我也不是不喜欢你",
+            "没有不喜欢你",
+            "我并不是不喜欢你",
+            "不是讨厌你",
+            "并不是让你别烦我",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=True, directed=True)[0], 0)
+        for text, expected in (("我不喜欢你", -2), ("别烦我", -1)):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=True, directed=True)[0], expected)
+
+    def test_space_boundaries_join_only_target_and_degree_fragments(self) -> None:
+        for text, expected in (
+            ("你 真棒", 1),
+            ("你 真 棒", 1),
+            ("麦麦 你 真棒", 1),
+            ("麦麦 超级 棒", 2),
+            ("我今天到图书馆 看了两章课本 晚上准备做习题", 1),
+            ("谢谢你 不过刚才那句话让我不舒服", 0),
+            ("累死了 加了一天班", 0),
+            ("你\n真棒", 0),
+            ("你真\n好", 0),
+            ("你，真棒", 0),
+            ("你， 真棒", 0),
+            ("你 但是 真棒", 0),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=True, directed=True)[0], expected)
 
 
 class PluginTests(unittest.IsolatedAsyncioTestCase):
@@ -666,8 +807,6 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.host.count("send.hybrid"), 0)
 
     async def test_ambiguous_and_complex_complaints_do_not_get_basic_score(self) -> None:
-        long_text = "今天做了好多事情，想跟你聊聊。" * 30
-        self.assertGreater(len(long_text), 256)
         for i, text in enumerate(
             (
                 "你刚才那句话让我不舒服",
@@ -676,7 +815,6 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
                 "你真行啊",
                 "你看他，你说他是不是很烦",
                 "这个游戏真垃圾",
-                long_text,
             )
         ):
             user = f"uncertain-{i}"
@@ -687,6 +825,28 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
             lambda: self.plugin.store.db.execute("SELECT count(*) FROM events").fetchone()[0]
         )
         self.assertEqual(event_count, 0)
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
+    async def test_long_addressed_neutral_chat_scores_once_and_uses_basic_clock(self) -> None:
+        text = "今天做了好多事情，想跟你聊聊。" * 30
+        self.assertGreater(len(text), 256)
+        interaction = message(text, group=True, at="12345", event="long-neutral")
+        with patch.object(plugin_module.time, "time", return_value=1000):
+            await self.plugin.record_interaction(interaction)
+            await self.plugin.record_interaction(interaction)
+        self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], 1)
+        events = await self.plugin.store.run(
+            lambda: [tuple(row) for row in self.plugin.store.db.execute("SELECT kind,delta,reason FROM events")]
+        )
+        self.assertEqual(events, [("score", 1, "基础交流")])
+        clocks = await self.plugin.store.run(
+            lambda: tuple(
+                self.plugin.store.db.execute(
+                    "SELECT last_interaction,last_positive,last_negative FROM affection WHERE user_id='u1'"
+                ).fetchone()
+            )
+        )
+        self.assertEqual(clocks, (1000, 0, 0))
         self.assertEqual(self.host.count("llm.generate"), 0)
 
     async def test_mentions_and_reply_sender_resolve_target_before_attitude(self) -> None:
@@ -822,7 +982,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         data["affection"]["score_cooldown_seconds"] = 0
         self.plugin.set_plugin_config(data)
         interaction = message(
-            "麦麦，我爱你。麦麦，我爱你。",
+            "麦麦，我爱你。麦麦，你真棒。麦麦，我爱你。",
             group=True,
             user="multi-clause",
             event="multi-clause",
@@ -834,6 +994,47 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
             lambda: self.plugin.store.db.execute("SELECT count(*) FROM events").fetchone()[0]
         )
         self.assertEqual(event_count, 1)
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
+    async def test_duplicate_attitude_clauses_do_not_inflate_love_intensity(self) -> None:
+        data = self.plugin.get_plugin_config_data()
+        data["affection"]["score_cooldown_seconds"] = 0
+        self.plugin.set_plugin_config(data)
+        interaction = message("麦麦，我爱你。麦麦，我爱你。", group=True, event="duplicate-love")
+        await self.plugin.record_interaction(interaction)
+        await self.plugin.record_interaction(interaction)
+        self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], 2)
+        events = await self.plugin.store.run(
+            lambda: [tuple(row) for row in self.plugin.store.db.execute("SELECT event_id,delta FROM events")]
+        )
+        self.assertEqual(events, [("duplicate-love", 2)])
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
+    async def test_blocked_message_does_not_consume_basic_or_emotion_cooldown(self) -> None:
+        interactions = (
+            (999, "你可真聪明", "sarcasm"),
+            (1000, "我把课本放在书桌上了", "neutral"),
+            (1001, "谢谢你", "thanks"),
+            (1002, "我讨厌你", "negative"),
+        )
+        for now, text, event in interactions:
+            with patch.object(plugin_module.time, "time", return_value=now):
+                await self.plugin.record_interaction(message(text, group=True, at="12345", event=event))
+        events = await self.plugin.store.run(
+            lambda: {
+                row["event_id"]: (row["delta"], row["reason"])
+                for row in self.plugin.store.db.execute("SELECT * FROM events")
+            }
+        )
+        self.assertEqual(events, {"neutral": (1, "基础交流"), "thanks": (1, "感谢"), "negative": (-2, "反感")})
+        clocks = await self.plugin.store.run(
+            lambda: tuple(
+                self.plugin.store.db.execute(
+                    "SELECT last_interaction,last_positive,last_negative FROM affection WHERE user_id='u1'"
+                ).fetchone()
+            )
+        )
+        self.assertEqual(clocks, (1000, 1001, 1002))
         self.assertEqual(self.host.count("llm.generate"), 0)
 
     async def test_clear_addressed_and_private_basic_chat_scores_once(self) -> None:
@@ -1139,7 +1340,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_successful_host_asr_scores_current_utterance_without_model_call(self) -> None:
         for i, (text, expected) in enumerate(
-            (("谢谢你", 1), ("我喜欢你", 2), ("我爱你", 3), ("我恨你", -3), ("你刚才那句话让我不舒服", 0))
+            (("谢谢你", 1), ("我喜欢你", 2), ("我爱你", 2), ("我恨你", -3), ("你刚才那句话让我不舒服", 0))
         ):
             user = f"asr-score-{i}"
             interaction = message(
