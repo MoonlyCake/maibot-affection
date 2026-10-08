@@ -50,16 +50,59 @@ FORMAL_RE = re.compile(r"(?:/affection|" + FORMAL_BODY + r")")
 # Hook 先整理真正的查询正文，Command 在 Host 注册会话后接管。
 FORMAL_COMMAND = r"^(?:/affection|" + FORMAL_BODY + r")$"
 QUERY_COMMAND = r"^(?!" + FORMAL_RE.pattern + r"$)" + QUERY_BODY + r"$"
-POSITIVE_RE = re.compile(
-    r"(?:谢谢(?:你)?|多谢(?:你)?|感谢(?:你)?|辛苦(?:你)?了|你真棒|你太棒了|你真好|"
-    r"你真可爱|你很可爱|喜欢你|我喜欢你|我很喜欢你|我爱你|你帮了我大忙)"
-    r"(?:谢谢(?:你)?|辛苦(?:你)?了|你真好)*"
-)
-NEGATIVE_RE = re.compile(
-    r"(?:你(?:真是|就是|是)?(?:垃圾|废物|傻逼|蠢货)|滚(?:开|吧)?|闭嘴|"
-    r"我(?:不喜欢|讨厌|恨)你|你(?:真|真的|太|好)?(?:烦|讨厌|恶心)(?:了|死了)?|别烦我)"
-)
 SPACE_PUNCT_RE = re.compile(r"[\s，,：:。！？?!~～]")
+TURN_WORDS = {"但是", "不过", "只是", "而是", "可是", "然而", "但"}
+CLAUSE_RE = re.compile(r"(但是|不过|只是|而是|可是|然而|但|\n)|(?:[^\S\n]|[，,。.!！?？；;：:])+")
+UNCERTAIN_RE = re.compile(r'["“”「」『』]|呵呵|可真|真行|真有你的|才怪|开玩笑|他说|她说|有人说')
+REFERENCE_RE = re.compile(r"刚才|刚刚|上次")
+OTHER_RE = re.compile(r"(?:他|她|它|这|那|作者|小[^\W\d_]|我(?:很|真的)?(?:喜欢|爱|讨厌)(?!你)).+")
+REPEATED_TARGET_RE = re.compile(r"^你{2,}")
+LAUGHTER_RE = re.compile(r"(?:哈哈)+$")
+VOCATIVE_RE = re.compile(r"^你(?=我|谢谢|多谢|感谢|辛苦|谢|thx|早|晚|在|吃|今天|一起|讲|帮)")
+NEUTRAL_RE = re.compile(
+    r"(?:早上好|早安|晚上好|晚安|你好|在吗|你在(?:吗|干嘛)|吃饭了吗|今天过得怎么样|"
+    r"今天天气怎么样|一起聊聊|讲个笑话|帮我看看这道题|帮我翻译一下这句话|"
+    r"(?:我)?今天吃了火锅|这周有点忙|今天吃什么好|你平时都喜欢干嘛|我刚下班|准备回家|"
+    r"你知道(?:今天|明天)会下雨吗|(?:帮我|请你)(?:看看|解释|翻译|总结|分析)(?:一下)?[^你]{1,24})"
+)
+# 完整分句模板：匹配不到即拒判，不从零散情绪词推测分数。
+EMOTION_RULES = tuple(
+    (re.compile(pattern), strength, label)
+    for pattern, strength, label in (
+        (r"(?:我(?:真的|很|非常)?恨你|你(?:真是|就是|是)?(?:个)?(?:垃圾|废物|傻逼|蠢货)|傻逼)", -3, "辱骂"),
+        (
+            r"(?:我(?:很|真的|特别)?(?:讨厌|不喜欢)你|你(?:真|很|太|真的)?(?:讨厌|恶心)|滚(?:开)?|"
+            r"闭嘴(?:吧你)?|你是不是傻|垃圾AI|跟你说话真累|你(?:今天)?说话让我很不舒服)",
+            -2,
+            "反感",
+        ),
+        (
+            r"(?:你(?:真|很|太|好|有点|真的)?(?:烦|敷衍|下头)|你让我(?:不舒服|难过|生气|失望)|别烦我|"
+            r"不想理你|你又在胡说八道|你(?:这|的)(?:回答|答案)(?:跟没说一样|错得离谱)|你能不能别插嘴|你个人机|你又答错)",
+            -1,
+            "不满",
+        ),
+        (
+            r"(?:我(?:是)?(?:真的|很|特别|非常|最|好|太)?爱你|我(?:是)?(?:真的)?(?:特别|非常|超级|最|太)喜欢你)",
+            3,
+            "喜欢",
+        ),
+        (
+            r"(?:(?:我)?(?:很|真的|越来越)?喜欢你|我(?:还是)?(?:很|好)?喜欢(?:跟你聊天|你说话的方式)|"
+            r"你帮了我(?:大忙|很多)|有你真好|跟你聊天好开心|(?:就)?你最懂我|我(?:一直都)?挺信任你|想你|你yyds|你是我的神)",
+            2,
+            "喜欢",
+        ),
+        (r"你(?:真的好|最|非常|超级)(?:棒|好|可爱|温柔|聪明|厉害)", 2, "夸奖"),
+        (
+            r"(?:谢谢(?:你)?|多谢(?:你)?|感谢(?:你)?|辛苦(?:你)?|谢|thx)",
+            1,
+            "感谢",
+        ),
+        (r"(?:你(?:真|很|太|好|挺|越来越)?(?:棒|好|可爱|温柔|聪明|厉害)|你说得对|有点喜欢你)", 1, "夸奖"),
+    )
+)
+EVENT_RETENTION_SECONDS = 30 * 24 * 60 * 60
 
 
 class PluginSettings(PluginConfigBase):
@@ -74,11 +117,11 @@ class AffectionSettings(PluginConfigBase):
 
     initial_score: int = Field(default=0, ge=-100, le=100, description="新用户初始值；0 表示初识")
     automatic: bool = Field(default=True, description="按指向麦麦的日常交流和明确情绪记录好感变化")
-    interaction_step: int = Field(default=1, ge=0, le=10, description="普通交流加分；设为 0 仅按明确情绪记分")
-    positive_step: int = Field(default=1, ge=1, le=10, description="正向互动加分")
-    negative_step: int = Field(default=2, ge=1, le=10, description="负向互动扣分")
+    interaction_step: int = Field(default=1, ge=0, le=10, description="明确中性交流加分，最终最多 3；0 关闭基础分")
+    positive_step: int = Field(default=1, ge=1, le=10, description="正向最低档基数；更强档加 1/2，最终最多 3")
+    negative_step: int = Field(default=2, ge=1, le=10, description="负向中档基数；轻/强档减/加 1，最终最多 3")
     score_cooldown_seconds: int = Field(default=300, ge=0, description="同一用户同方向记分间隔，重启后保留")
-    group_requires_address: bool = Field(default=True, description="群聊查询与记分需 @ 麦麦或以麦麦称呼开头")
+    group_requires_address: bool = Field(default=True, description="群聊查询需 @ 或昵称开头；评分始终确认对象")
     extra_names: list[str] = Field(default_factory=list, description="额外称呼；自动读取麦麦昵称与别名")
 
 
@@ -101,9 +144,11 @@ class AffectionConfig(PluginConfigBase):
 class IntentMatcher:
     def __init__(self, names: list[str]) -> None:
         self.names = sorted({name.strip() for name in names if name.strip()}, key=len, reverse=True)
+        self.name_re = re.compile(r"@?(?:" + ("|".join(map(re.escape, self.names)) or r"(?!)") + ")")
 
-    def body(self, text: str) -> tuple[str, bool]:
+    def body(self, text: str) -> tuple[str, bool, str]:
         text = text.strip()
+        punctuated = text
         named = False
         for name in self.names:
             for prefix in ("@" + name, name):
@@ -118,7 +163,7 @@ class IntentMatcher:
             if text.startswith(prefix):
                 text = text[len(prefix) :]
                 break
-        return text.rstrip("呀呢啊哦啦"), named
+        return text.rstrip("呀呢啊哦啦"), named, punctuated
 
     def query(self, body: str) -> str | None:
         if FORMAL_RE.fullmatch(body):
@@ -129,12 +174,86 @@ class IntentMatcher:
             return "relationship"
         return None
 
-    def delta(self, body: str, positive: int, negative: int, interaction: int = 0) -> int:
-        if NEGATIVE_RE.fullmatch(body):
-            return -negative
-        if POSITIVE_RE.fullmatch(body):
-            return positive
-        return interaction
+    def score(
+        self,
+        text: str,
+        *,
+        private: bool,
+        directed: bool,
+        other_target: bool = False,
+        positive: int = 1,
+        negative: int = 2,
+        interaction: int = 1,
+    ) -> tuple[int, str]:
+        body, named, _ = self.body(text)
+        if not body or body.startswith("/") or self.query(body):
+            return 0, "查询或命令"
+        if UNCERTAIN_RE.search(text):
+            return 0, "不确定"
+        implicit = (private or directed or named) and not other_target and (private or len(body) <= 40)
+        scores: dict[str, tuple[int, str]] = {}
+        unknown = neutral = turning = named_scope = False
+        for part in CLAUSE_RE.split(text):
+            if not part:
+                continue
+            if part == "\n":
+                if other_target:
+                    named_scope = False
+                turning = False
+                continue
+            if part in TURN_WORDS:
+                turning = True
+                continue
+            explicit = bool(self.name_re.search(part))
+            clause = REPEATED_TARGET_RE.sub("你", self.name_re.sub("你", part)).rstrip("了啊呀呢哦啦吧哇~～")
+            clause = LAUGHTER_RE.sub("", clause)
+            if clause == "你":
+                named_scope = explicit and len(body) <= 40
+                continue
+            candidates = (clause, clause[1:]) if self.name_re.match(part) and VOCATIVE_RE.match(clause) else (clause,)
+            is_neutral = any(NEUTRAL_RE.fullmatch(candidate) for candidate in candidates)
+            if OTHER_RE.fullmatch(clause) and "你" not in clause and not is_neutral:
+                turning = False
+                continue
+            if not (explicit or named_scope or implicit):
+                unknown = True
+                turning = False
+                continue
+            if is_neutral and len(body) <= 40:
+                neutral = True
+                turning = False
+                continue
+            if REFERENCE_RE.search(clause):
+                unknown = True
+                turning = False
+                continue
+            match = next(
+                (
+                    (strength, label, candidate)
+                    for candidate in candidates
+                    for pattern, strength, label in EMOTION_RULES
+                    if pattern.fullmatch(candidate)
+                ),
+                None,
+            )
+            if match is not None:
+                strength, label, clause = match
+                delta = min(3, positive + strength - 1) if strength > 0 else -min(3, max(1, negative - strength - 2))
+                if turning:
+                    scores.clear()
+                    unknown = False
+                scores[clause] = (delta, label)
+                turning = False
+            else:
+                unknown = True
+                turning = False
+        if unknown:
+            return 0, "不确定"
+        if scores:
+            total = sum(delta for delta, _ in scores.values())
+            labels = sorted({label for _, label in scores.values()})
+            return max(-3, min(3, total)), "/".join(labels)
+        return (min(3, interaction), "基础交流") if neutral else (0, "对象不明")
 
 
 def relationship(score: int) -> str:
@@ -181,6 +300,7 @@ class AffectionStore:
                 score INTEGER NOT NULL CHECK(score BETWEEN -100 AND 100),
                 last_positive REAL NOT NULL DEFAULT 0,
                 last_negative REAL NOT NULL DEFAULT 0,
+                last_interaction REAL NOT NULL DEFAULT 0,
                 last_query REAL NOT NULL DEFAULT 0,
                 last_formal_query REAL NOT NULL DEFAULT 0,
                 PRIMARY KEY(platform, user_id)
@@ -197,7 +317,15 @@ class AffectionStore:
                 reason TEXT NOT NULL,
                 PRIMARY KEY(platform, stream_id, event_id, kind)
             ) WITHOUT ROWID;
+            CREATE INDEX IF NOT EXISTS events_timestamp ON events(timestamp);
         """)
+        now = time.time()
+        with self.db:
+            self.db.execute("DELETE FROM events WHERE timestamp < ?", (now - EVENT_RETENTION_SECONDS,))
+            if "last_interaction" not in {row["name"] for row in self.db.execute("PRAGMA table_info(affection)")}:
+                self.db.execute("ALTER TABLE affection ADD COLUMN last_interaction REAL NOT NULL DEFAULT 0")
+                self.db.execute("UPDATE events SET reason='历史事件'")
+        self.next_cleanup = now + 3600
 
     def _ensure_user(self, platform: str, user_id: str, initial: int) -> sqlite3.Row:
         self.db.execute(
@@ -224,11 +352,16 @@ class AffectionStore:
     ) -> dict[str, Any]:
         with self.db:
             self.db.execute("BEGIN IMMEDIATE")
+            if now >= self.next_cleanup:
+                self.db.execute("DELETE FROM events WHERE timestamp < ?", (now - EVENT_RETENTION_SECONDS,))
+                self.next_cleanup = now + 3600
             row = self._ensure_user(platform, user_id, initial)
             if kind == "formal_query":
                 clock = "last_formal_query"
             elif kind == "query":
                 clock = "last_query"
+            elif reason == "基础交流":
+                clock = "last_interaction"
             else:
                 clock = "last_positive" if delta > 0 else "last_negative"
             allowed = now >= row[clock] + cooldown
@@ -244,7 +377,7 @@ class AffectionStore:
                     now,
                     score - row["score"],
                     score,
-                    reason[:80],
+                    reason,
                 ),
             ).rowcount
             if not inserted or not allowed:
@@ -364,14 +497,11 @@ class AffectionPlugin(MaiBotPlugin):
                 if text.startswith("[语音: ") and text.endswith("]"):
                     text = text[5:-1].strip()
             parts.append(text)
-        return "".join(parts)
+        return "\n".join(parts)
 
-    def _addressed(self, message: dict[str, Any], named: bool) -> bool:
-        info = message["message_info"]
-        if not info.get("group_info") or named:
-            return True
-        route = info.get("additional_config") or {}
-        account = next(
+    def _account(self, message: dict[str, Any]) -> str:
+        route = message["message_info"].get("additional_config") or {}
+        return next(
             (
                 str(route[key])
                 for key in (
@@ -384,6 +514,11 @@ class AffectionPlugin(MaiBotPlugin):
             ),
             str(self._bot["qq_account"]) if message["platform"] == "qq" else "",
         )
+
+    def _addressed(self, message: dict[str, Any], named: bool) -> bool:
+        if not message["message_info"].get("group_info") or named:
+            return True
+        account = self._account(message)
         return bool(account) and any(
             segment["type"] == "at" and str(segment["data"]["target_user_id"]) == account
             for segment in message["raw_message"]
@@ -402,16 +537,31 @@ class AffectionPlugin(MaiBotPlugin):
         if not self.config.plugin.enabled or message.get("is_notify"):
             return {"action": "continue"}
         text = self._message_text(message)
-        body, named = self.matcher.body(text)
-        if settings.group_requires_address and not self._addressed(message, named) and body != "/affection":
-            return {"action": "continue"}
+        body, named, punctuated = self.matcher.body(text)
+        addressed = self._addressed(message, named)
         if self.matcher.query(body):
+            if settings.group_requires_address and not addressed and body != "/affection":
+                return {"action": "continue"}
             # 排除 Host 的引用描述、@ 展示位置和 ASR 包装，保留用户当前这句话。
             message["processed_plain_text"] = body
             return {"action": "continue", "modified_kwargs": {"message": message}}
         if not settings.automatic or not body or body.startswith("/"):
             return {"action": "continue"}
-        delta = self.matcher.delta(body, settings.positive_step, settings.negative_step, settings.interaction_step)
+        account = self._account(message)
+        other_target = any(
+            (segment["type"] == "at" and str(segment["data"]["target_user_id"]) != account)
+            or (segment["type"] == "reply" and str(segment["data"].get("target_message_sender_id")) != account)
+            for segment in message["raw_message"]
+        )
+        delta, label = self.matcher.score(
+            punctuated,
+            private=not message["message_info"].get("group_info"),
+            directed=addressed,
+            other_target=other_target,
+            positive=settings.positive_step,
+            negative=settings.negative_step,
+            interaction=settings.interaction_step,
+        )
         if delta:
             result = await self.store.record(
                 message["platform"],
@@ -422,14 +572,16 @@ class AffectionPlugin(MaiBotPlugin):
                 delta,
                 settings.initial_score,
                 settings.score_cooldown_seconds,
-                body,
+                label,
             )
             if result["accepted"]:
                 self.ctx.logger.info(
-                    "好感度已记分：platform=%s, user_id=%s, score=%s",
+                    "好感度已记分：platform=%s, user_id=%s, score=%s, delta=%s, label=%s",
                     message["platform"],
                     message["message_info"]["user_info"]["user_id"],
                     result["score"],
+                    delta,
+                    label,
                 )
         return {"action": "continue"}
 
@@ -465,7 +617,7 @@ class AffectionPlugin(MaiBotPlugin):
         text = self._message_text(message)
         if len(text) > 180:
             return True, None, 0
-        body, named = self.matcher.body(text)
+        body, named, _ = self.matcher.body(text)
         kind = self.matcher.query(body)
         if kind is None:
             return True, None, 0
@@ -496,6 +648,7 @@ class AffectionPlugin(MaiBotPlugin):
                     0,
                     self.config.affection.initial_score,
                     self.config.reply.cooldown_seconds,
+                    "正式查询" if kind == "formal" else "日常查询",
                 )
                 if not result["accepted"]:
                     return
@@ -580,7 +733,7 @@ class AffectionPlugin(MaiBotPlugin):
             delta,
             self.config.affection.initial_score,
             self.config.affection.score_cooldown_seconds,
-            reason,
+            "插件上报",
         )
 
 

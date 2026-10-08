@@ -98,6 +98,35 @@ def message(
     }
 
 
+def quoted(text: str, *, sender: str = "12345", event: str = "quoted-message") -> dict:
+    """Host 1.3.3 的独立引用段；正文不属于当前发送者。"""
+    return {
+        "type": "reply",
+        "data": {
+            "target_message_id": event,
+            "target_message_content": text,
+            "target_message_sender_id": sender,
+            "target_message_sender_nickname": "麦麦" if sender == "12345" else "群友",
+            "target_message_sender_cardname": "",
+        },
+    }
+
+
+def forwarded(text: str) -> dict:
+    return {
+        "type": "forward",
+        "data": [
+            {
+                "user_id": "someone-else",
+                "user_nickname": "群友",
+                "user_cardname": "",
+                "message_id": "forwarded-message",
+                "content": [{"type": "text", "data": text}],
+            }
+        ],
+    }
+
+
 class StoreTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
@@ -109,7 +138,9 @@ class StoreTests(unittest.IsolatedAsyncioTestCase):
         await self.store.close()
         self.temp.cleanup()
 
-    async def record(self, event, delta, *, platform="qq", stream="s1", user="u1", cooldown=0, now=1000, kind="score"):
+    async def record(
+        self, event, delta, *, platform="qq", stream="s1", user="u1", cooldown=0, now=1000, kind="score", reason="感谢"
+    ):
         return await self.store.run(
             self.store._record,
             platform,
@@ -120,7 +151,7 @@ class StoreTests(unittest.IsolatedAsyncioTestCase):
             delta,
             0,
             cooldown,
-            "test",
+            reason,
             now,
         )
 
@@ -150,6 +181,131 @@ class StoreTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse((await self.record("plus3", 3, cooldown=300, now=1200))["accepted"])
         self.assertTrue((await self.record("plus4", 3, cooldown=300, now=1300))["accepted"])
         self.assertEqual(await self.store.get("qq", "u1", 0), 4)
+
+    async def test_basic_and_emotion_cooldowns_are_independent_and_persistent(self) -> None:
+        self.assertTrue((await self.record("basic", 1, reason="基础交流", cooldown=300, now=1000))["accepted"])
+        self.assertTrue((await self.record("praise", 2, reason="感谢", cooldown=300, now=1001))["accepted"])
+        self.assertTrue((await self.record("negative", -2, reason="讨厌", cooldown=300, now=1002))["accepted"])
+        for event, delta, reason in (
+            ("basic-again", 1, "基础交流"),
+            ("praise-again", 2, "感谢"),
+            ("negative-again", -2, "讨厌"),
+        ):
+            with self.subTest(reason=reason):
+                self.assertFalse((await self.record(event, delta, reason=reason, cooldown=300, now=1100))["accepted"])
+        await self.store.close()
+        self.store = plugin_module.AffectionStore(self.path)
+        await self.store.open()
+        self.assertFalse((await self.record("basic-restart", 1, reason="基础交流", cooldown=300, now=1200))["accepted"])
+        self.assertTrue((await self.record("basic-later", 1, reason="基础交流", cooldown=300, now=1300))["accepted"])
+        self.assertTrue((await self.record("praise-later", 2, reason="感谢", cooldown=300, now=1301))["accepted"])
+        self.assertTrue((await self.record("negative-later", -2, reason="讨厌", cooldown=300, now=1302))["accepted"])
+        self.assertEqual(await self.store.get("qq", "u1", 0), 2)
+
+    async def test_legacy_database_migration_preserves_score_and_cooldowns(self) -> None:
+        legacy_path = Path(self.temp.name) / "legacy.sqlite3"
+        with sqlite3.connect(legacy_path) as database:
+            database.executescript("""
+                CREATE TABLE affection (
+                    platform TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    score INTEGER NOT NULL CHECK(score BETWEEN -100 AND 100),
+                    last_positive REAL NOT NULL DEFAULT 0,
+                    last_negative REAL NOT NULL DEFAULT 0,
+                    last_query REAL NOT NULL DEFAULT 0,
+                    last_formal_query REAL NOT NULL DEFAULT 0,
+                    PRIMARY KEY(platform, user_id)
+                ) WITHOUT ROWID;
+                CREATE TABLE events (
+                    platform TEXT NOT NULL,
+                    stream_id TEXT NOT NULL,
+                    event_id TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    timestamp REAL NOT NULL,
+                    delta INTEGER NOT NULL,
+                    score INTEGER NOT NULL,
+                    reason TEXT NOT NULL,
+                    PRIMARY KEY(platform, stream_id, event_id, kind)
+                ) WITHOUT ROWID;
+                INSERT INTO affection VALUES('qq', 'u1', 42, 1000, 900, 800, 750);
+                INSERT INTO events VALUES('qq', 's1', 'old', 'score', 'u1', 1000, 1, 42, '用户原始聊天内容');
+            """)
+        legacy = plugin_module.AffectionStore(legacy_path)
+        with patch.object(plugin_module.time, "time", return_value=1100):
+            await legacy.open()
+        try:
+            self.assertEqual(await legacy.get("qq", "u1", 0), 42)
+            for event, delta, kind, cooldown, reason, now in (
+                ("positive-too-early", 1, "score", 300, "感谢", 1100),
+                ("negative-too-early", -1, "score", 300, "讨厌", 1100),
+                ("query-too-early", 0, "query", 10, "", 805),
+                ("formal-too-early", 0, "formal_query", 10, "", 755),
+            ):
+                result = await legacy.run(
+                    legacy._record, "qq", "u1", "s1", event, kind, delta, 0, cooldown, reason, now
+                )
+                with self.subTest(event=event):
+                    self.assertEqual(result, {"accepted": False, "score": 42})
+            basic = await legacy.run(
+                legacy._record, "qq", "u1", "s1", "first-basic", "score", 1, 0, 300, "基础交流", 1100
+            )
+            self.assertEqual(basic, {"accepted": True, "score": 43})
+            reasons = await legacy.run(lambda: dict(legacy.db.execute("SELECT event_id,reason FROM events")))
+            self.assertEqual(reasons["old"], "历史事件")
+            self.assertEqual(reasons["first-basic"], "基础交流")
+        finally:
+            await legacy.close()
+        legacy = plugin_module.AffectionStore(legacy_path)
+        with patch.object(plugin_module.time, "time", return_value=1200):
+            await legacy.open()
+        try:
+            self.assertEqual(await legacy.get("qq", "u1", 0), 43)
+            basic = await legacy.run(
+                legacy._record, "qq", "u1", "s1", "restart-basic", "score", 1, 0, 300, "基础交流", 1200
+            )
+            self.assertEqual(basic, {"accepted": False, "score": 43})
+            reasons = await legacy.run(lambda: dict(legacy.db.execute("SELECT event_id,reason FROM events")))
+            self.assertEqual(reasons["first-basic"], "基础交流")
+        finally:
+            await legacy.close()
+
+    async def test_event_ttl_cleans_history_without_resetting_scores(self) -> None:
+        ttl = 30 * 24 * 60 * 60
+        start = 10_000_000
+        await self.store.close()
+        self.store = plugin_module.AffectionStore(self.path)
+        with patch.object(plugin_module.time, "time", return_value=start):
+            await self.store.open()
+        await self.record("old", 2, now=start)
+        self.assertFalse((await self.record("old", 2, now=start + ttl - 1))["accepted"])
+        self.assertEqual(await self.store.get("qq", "u1", 0), 2)
+        await self.record("fresh", 1, now=start + ttl + 3600)
+        events = await self.store.run(lambda: [row[0] for row in self.store.db.execute("SELECT event_id FROM events")])
+        self.assertEqual(events, ["fresh"])
+        self.assertEqual(await self.store.get("qq", "u1", 0), 3)
+
+    async def test_event_cleanup_runs_on_startup_and_then_hourly_writes(self) -> None:
+        ttl = 30 * 24 * 60 * 60
+        start = 10_000_000
+        await self.store.close()
+        self.store = plugin_module.AffectionStore(self.path)
+        with patch.object(plugin_module.time, "time", return_value=start - ttl - 1):
+            await self.store.open()
+        await self.record("expired-startup", 2, now=start - ttl - 1)
+        await self.record("expires-later", 1, now=start - ttl + 100)
+        await self.store.close()
+        self.store = plugin_module.AffectionStore(self.path)
+        with patch.object(plugin_module.time, "time", return_value=start):
+            await self.store.open()
+        await self.record("before-hour", 1, now=start + 3599)
+        events = await self.store.run(lambda: {row[0] for row in self.store.db.execute("SELECT event_id FROM events")})
+        self.assertNotIn("expired-startup", events)
+        self.assertIn("expires-later", events)
+        await self.record("after-hour", 1, now=start + 3600)
+        events = await self.store.run(lambda: {row[0] for row in self.store.db.execute("SELECT event_id FROM events")})
+        self.assertEqual(events, {"before-hour", "after-hour"})
+        self.assertEqual(await self.store.get("qq", "u1", 0), 5)
 
     async def test_rejected_event_cannot_be_replayed_after_cooldown(self) -> None:
         await self.record("one", 1, cooldown=300, now=1000)
@@ -226,7 +382,7 @@ class MatcherTests(unittest.TestCase):
         }
         for text, expected in cases.items():
             with self.subTest(text=text):
-                body, _ = self.matcher.body(text)
+                body, _, _ = self.matcher.body(text)
                 pattern = plugin_module.FORMAL_COMMAND if expected == "formal" else plugin_module.QUERY_COMMAND
                 other_pattern = plugin_module.QUERY_COMMAND if expected == "formal" else plugin_module.FORMAL_COMMAND
                 self.assertIsNotNone(re.fullmatch(pattern, body))
@@ -249,19 +405,61 @@ class MatcherTests(unittest.TestCase):
             "今天心情怎么样",
         ):
             with self.subTest(text=text):
-                body, _ = self.matcher.body(text)
+                body, _, _ = self.matcher.body(text)
                 self.assertIsNone(self.matcher.query(body))
 
-    def test_addressing_and_exact_interaction_intent(self) -> None:
-        body, named = self.matcher.body("麦麦，谢谢你！")
+    def test_scoring_keeps_query_normalization_separate_from_attitude(self) -> None:
+        body, named, punctuated = self.matcher.body("麦麦，谢谢你！")
         self.assertTrue(named)
-        self.assertEqual(self.matcher.delta(body, 1, 2), 1)
-        for body in ("你是垃圾", "我不喜欢你", "我讨厌你", "我恨你", "你真烦", "别烦我"):
-            self.assertEqual(self.matcher.delta(body, 1, 2, interaction=1), -2)
-        self.assertEqual(self.matcher.delta("谢谢你", 4, 2, interaction=1), 4)
-        self.assertEqual(self.matcher.delta("今天吃了火锅", 4, 2, interaction=1), 1)
-        for body in ("他对我说谢谢你", "这个游戏真垃圾", "喜欢你的照片", "今天辛苦工作了"):
-            self.assertEqual(self.matcher.delta(body, 1, 2), 0)
+        self.assertEqual(body, "谢谢你")
+        self.assertEqual(punctuated, "麦麦，谢谢你！")
+        for text, expected in (
+            ("麦麦，谢谢你！", 1),
+            ("我喜欢你", 2),
+            ("我爱你", 3),
+            ("我不喜欢你", -2),
+            ("我讨厌你", -2),
+            ("我恨你", -3),
+            ("你是垃圾", -3),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=True, directed=True)[0], expected)
+
+    def test_other_recipient_makes_implicit_you_ambiguous(self) -> None:
+        self.assertEqual(self.matcher.score("你真好", private=False, directed=True, other_target=True)[0], 0)
+        self.assertEqual(self.matcher.score("你真好", private=True, directed=True, other_target=True)[0], 0)
+        self.assertEqual(self.matcher.score("麦麦，你真好", private=False, directed=True, other_target=True)[0], 1)
+
+    def test_uncertain_sentiment_never_falls_back_to_basic_interaction(self) -> None:
+        for text in (
+            "你刚才那句话让我不舒服",
+            "你可真聪明",
+            "你真行啊",
+            "他对我说谢谢你",
+            "这个游戏真垃圾",
+            "喜欢你的照片",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=True, directed=True, interaction=1)[0], 0)
+
+    def test_greeting_uses_basic_category_and_does_not_cancel_rejection(self) -> None:
+        self.assertEqual(self.matcher.score("你好", private=True, directed=True), (1, "基础交流"))
+        self.assertEqual(self.matcher.score("你好", private=True, directed=True, interaction=0)[0], 0)
+        self.assertEqual(self.matcher.score("你好，我讨厌你", private=True, directed=True)[0], -2)
+
+    def test_unknown_complaint_or_threat_is_not_hidden_by_polite_words(self) -> None:
+        for text in (
+            "麦麦，我讨厌你，但是，别再敷衍我，谢谢你",
+            "早安，小心我揍你",
+            "麦麦，早安，这次你根本没听明白我说什么",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=True, directed=True)[0], 0)
+
+    def test_nickname_as_subject_or_object_is_not_direct_address(self) -> None:
+        for text in ("麦麦喜欢你", "你喜欢麦麦"):
+            with self.subTest(text=text):
+                self.assertEqual(self.matcher.score(text, private=True, directed=True)[0], 0)
 
 
 class PluginTests(unittest.IsolatedAsyncioTestCase):
@@ -402,7 +600,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
                 user="quote",
                 event="quote",
                 segments=[
-                    {"type": "reply", "data": {"text": "之前说的其他话"}},
+                    quoted("之前说的其他话"),
                     {"type": "text", "data": "我的好感度是多少"},
                 ],
                 processed_plain_text="[回复之前说的其他话] 我的好感度是多少",
@@ -428,7 +626,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
                 user="reply-voice",
                 event="reply-voice",
                 segments=[
-                    {"type": "reply", "data": {"text": "以前的消息"}},
+                    quoted("以前的消息"),
                     {"type": "voice", "data": "[语音: 我的好感度是多少？]"},
                 ],
                 processed_plain_text="[回复以前的消息] [语音: 我的好感度是多少？]",
@@ -455,8 +653,8 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
                 ("谢谢你", 1),
                 ("谢谢你", 1),
                 ("你真好", 1),
-                ("你是垃圾", -2),
-                ("好感度系统怎么实现", 1),
+                ("你是垃圾", -3),
+                ("好感度系统怎么实现", 0),
             )
         ):
             self.assertEqual(
@@ -467,17 +665,185 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.host.count("llm.generate"), 0)
         self.assertEqual(self.host.count("send.hybrid"), 0)
 
-    async def test_addressed_and_private_basic_chat_scores_once_including_long_messages(self) -> None:
+    async def test_ambiguous_and_complex_complaints_do_not_get_basic_score(self) -> None:
+        long_text = "今天做了好多事情，想跟你聊聊。" * 30
+        self.assertGreater(len(long_text), 256)
+        for i, text in enumerate(
+            (
+                "你刚才那句话让我不舒服",
+                "你根本没听明白我说什么，算了",
+                "我不是在夸你，你可真聪明",
+                "你真行啊",
+                "你看他，你说他是不是很烦",
+                "这个游戏真垃圾",
+                long_text,
+            )
+        ):
+            user = f"uncertain-{i}"
+            await self.plugin.record_interaction(message(text, group=True, at="12345", user=user, event=user))
+            with self.subTest(text=text):
+                self.assertEqual((await self.plugin.get_affection("qq", user))["score"], 0)
+        event_count = await self.plugin.store.run(
+            lambda: self.plugin.store.db.execute("SELECT count(*) FROM events").fetchone()[0]
+        )
+        self.assertEqual(event_count, 0)
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
+    async def test_mentions_and_reply_sender_resolve_target_before_attitude(self) -> None:
+        cases = (
+            (
+                message(
+                    "你真好",
+                    group=True,
+                    at="12345",
+                    user="other-at",
+                    event="other-at",
+                    segments=[{"type": "at", "data": {"target_user_id": "u2"}}, {"type": "text", "data": "你真好"}],
+                ),
+                0,
+            ),
+            (
+                message(
+                    "你真烦",
+                    group=True,
+                    at="12345",
+                    user="other-quote",
+                    event="other-quote",
+                    segments=[quoted("麦麦，你真好", sender="u2"), {"type": "text", "data": "你真烦"}],
+                ),
+                0,
+            ),
+            (
+                message(
+                    "你真好",
+                    user="private-quote",
+                    event="private-quote",
+                    segments=[quoted("谢谢你", sender="u2"), {"type": "text", "data": "你真好"}],
+                ),
+                0,
+            ),
+            (
+                message(
+                    "麦麦，你真好",
+                    group=True,
+                    at="12345",
+                    user="explicit-target",
+                    event="explicit-target",
+                    segments=[quoted("你是垃圾", sender="u2"), {"type": "text", "data": "麦麦，你真好"}],
+                ),
+                1,
+            ),
+        )
+        for interaction, expected in cases:
+            user = interaction["message_info"]["user_info"]["user_id"]
+            with self.subTest(user=user):
+                await self.plugin.record_interaction(interaction)
+                self.assertEqual((await self.plugin.get_affection("qq", user))["score"], expected)
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
+    async def test_other_mention_starts_new_target_after_named_bot_clause(self) -> None:
+        interaction = message(
+            "",
+            group=True,
+            user="changed-target",
+            event="changed-target",
+            segments=[
+                {"type": "text", "data": "麦麦谢谢你。"},
+                {"type": "at", "data": {"target_user_id": "u2"}},
+                {"type": "text", "data": "你真棒"},
+            ],
+            processed_plain_text="麦麦谢谢你。@群友 你真棒",
+        )
+        self.assertEqual(self.plugin._message_text(interaction), "麦麦谢谢你。\n你真棒")
+        await self.plugin.record_interaction(interaction)
+        self.assertEqual((await self.plugin.get_affection("qq", "changed-target"))["score"], 0)
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
+    async def test_only_current_text_is_scored_and_nontext_does_not_join_words(self) -> None:
+        extraction = message(
+            "",
+            segments=[
+                quoted("旧的负面话语"),
+                {"type": "text", "data": "麦麦，谢谢你！"},
+                forwarded("历史表白"),
+                {"type": "voice", "data": "[语音: 今天过得怎么样？]"},
+            ],
+        )
+        self.assertEqual(self.plugin._message_text(extraction), "麦麦，谢谢你！\n今天过得怎么样？")
+        cases = (
+            (
+                message(
+                    "麦麦，谢谢你",
+                    group=True,
+                    user="quoted-current",
+                    event="quoted-current",
+                    segments=[quoted("麦麦，你是垃圾"), {"type": "text", "data": "麦麦，谢谢你"}],
+                    processed_plain_text="[回复麦麦，你是垃圾] 麦麦，谢谢你",
+                ),
+                1,
+            ),
+            (
+                message(
+                    "早上好",
+                    group=True,
+                    at="12345",
+                    user="forward-current",
+                    event="forward-current",
+                    segments=[forwarded("麦麦，我爱你"), {"type": "text", "data": "早上好"}],
+                    processed_plain_text="[转发麦麦，我爱你] 早上好",
+                ),
+                1,
+            ),
+            (
+                message(
+                    "你真好",
+                    group=True,
+                    at="12345",
+                    user="split-word",
+                    event="split-word",
+                    segments=[
+                        {"type": "text", "data": "你真"},
+                        {"type": "image", "data": "图片内容"},
+                        {"type": "text", "data": "好"},
+                    ],
+                ),
+                0,
+            ),
+        )
+        for interaction, expected in cases:
+            user = interaction["message_info"]["user_info"]["user_id"]
+            with self.subTest(user=user):
+                await self.plugin.record_interaction(interaction)
+                self.assertEqual((await self.plugin.get_affection("qq", user))["score"], expected)
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
+    async def test_multiple_clauses_are_capped_and_settled_once(self) -> None:
         data = self.plugin.get_plugin_config_data()
         data["affection"]["score_cooldown_seconds"] = 0
         self.plugin.set_plugin_config(data)
-        long_text = "今天做了好多事情，想跟你聊聊。" * 30
-        self.assertGreater(len(long_text), 256)
+        interaction = message(
+            "麦麦，我爱你。麦麦，我爱你。",
+            group=True,
+            user="multi-clause",
+            event="multi-clause",
+        )
+        await self.plugin.record_interaction(interaction)
+        await self.plugin.record_interaction(interaction)
+        self.assertEqual((await self.plugin.get_affection("qq", "multi-clause"))["score"], 3)
+        event_count = await self.plugin.store.run(
+            lambda: self.plugin.store.db.execute("SELECT count(*) FROM events").fetchone()[0]
+        )
+        self.assertEqual(event_count, 1)
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
+    async def test_clear_addressed_and_private_basic_chat_scores_once(self) -> None:
+        data = self.plugin.get_plugin_config_data()
+        data["affection"]["score_cooldown_seconds"] = 0
+        self.plugin.set_plugin_config(data)
         cases = (
             message("今天过得怎么样", group=True, at="12345", user="at-basic", event="at-basic"),
-            message("这周有点忙", user="private-basic", event="private-basic"),
+            message("早上好", user="private-basic", event="private-basic"),
             message("麦麦我今天吃了火锅", group=True, user="named-basic", event="named-basic"),
-            message(long_text, group=True, at="12345", user="long-basic", event="long-basic"),
             message(
                 "",
                 group=True,
@@ -509,7 +875,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
                 at="12345",
                 user="quoted-history",
                 segments=[
-                    {"type": "reply", "data": {"text": "谢谢你，麦麦"}},
+                    quoted("谢谢你，麦麦"),
                 ],
                 processed_plain_text="@麦麦 [回复谢谢你，麦麦]",
             ),
@@ -519,7 +885,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
                 at="12345",
                 user="forwarded-history",
                 segments=[
-                    {"type": "forward", "data": {"text": "麦麦，我喜欢你"}},
+                    forwarded("麦麦，我喜欢你"),
                 ],
                 processed_plain_text="@麦麦 [转发麦麦，我喜欢你]",
             ),
@@ -534,11 +900,26 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.host.count("llm.generate"), 0)
 
     async def test_explicit_negative_overrides_basic_interaction_score(self) -> None:
-        for i, text in enumerate(("我不喜欢你", "我讨厌你", "我恨你", "你真烦", "别烦我")):
+        for i, (text, expected) in enumerate(
+            (("我不喜欢你", -2), ("我讨厌你", -2), ("我恨你", -3), ("你真烦", -1), ("别烦我", -1))
+        ):
             await self.plugin.record_interaction(
                 message(text, group=True, at="12345", user=f"negative-{i}", event=f"negative-{i}")
             )
-            self.assertEqual((await self.plugin.get_affection("qq", f"negative-{i}"))["score"], -2)
+            self.assertEqual((await self.plugin.get_affection("qq", f"negative-{i}"))["score"], expected)
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
+    async def test_turning_clause_only_replaces_attitude_about_same_target(self) -> None:
+        for i, (text, expected) in enumerate(
+            (
+                ("麦麦，你真好，但是这个游戏真垃圾", 1),
+                ("麦麦，你真好，但是麦麦，你真烦", -1),
+            )
+        ):
+            user = f"turning-{i}"
+            await self.plugin.record_interaction(message(text, group=True, at="12345", user=user, event=user))
+            with self.subTest(text=text):
+                self.assertEqual((await self.plugin.get_affection("qq", user))["score"], expected)
         self.assertEqual(self.host.count("llm.generate"), 0)
 
     async def test_query_hook_does_not_add_basic_interaction_score(self) -> None:
@@ -565,7 +946,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((await self.plugin.get_affection("qq", user))["score"], expected_score)
         self.assertEqual(self.host.count("llm.generate"), 0)
 
-    async def test_basic_chat_and_praise_share_persistent_positive_cooldown(self) -> None:
+    async def test_basic_chat_and_praise_have_independent_persistent_cooldowns(self) -> None:
         data = self.plugin.get_plugin_config_data()
         data["affection"]["positive_step"] = 4
         self.plugin.set_plugin_config(data)
@@ -573,17 +954,52 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
             await self.plugin.record_interaction(message("今天吃了火锅", group=True, at="12345", event="first-basic"))
         with patch.object(plugin_module.time, "time", return_value=1001):
             await self.plugin.record_interaction(message("谢谢你", group=True, at="12345", event="early-praise"))
-        self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], 1)
+            self.assertFalse((await self.plugin.adjust_affection("qq", "u1", "stream-1", "early-api", 3))["accepted"])
+        self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], 4)
         await self.plugin.on_unload()
-        await self.plugin.on_load()
         with patch.object(plugin_module.time, "time", return_value=1200):
-            await self.plugin.record_interaction(message("这周有点忙", group=True, at="12345", event="after-restart"))
-        self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], 1)
+            await self.plugin.on_load()
+        with patch.object(plugin_module.time, "time", return_value=1200):
+            await self.plugin.record_interaction(message("早上好", group=True, at="12345", event="after-restart"))
+            await self.plugin.record_interaction(
+                message("谢谢你", group=True, at="12345", event="praise-after-restart")
+            )
+        self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], 4)
         with patch.object(plugin_module.time, "time", return_value=1300):
-            await self.plugin.record_interaction(message("谢谢你", group=True, at="12345", event="later-praise"))
+            await self.plugin.record_interaction(message("早上好", group=True, at="12345", event="later-basic"))
         with patch.object(plugin_module.time, "time", return_value=1301):
-            await self.plugin.record_interaction(message("周末想去散步", group=True, at="12345", event="later-basic"))
-        self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], 5)
+            await self.plugin.record_interaction(message("谢谢你", group=True, at="12345", event="later-praise"))
+        self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], 8)
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
+    async def test_events_store_categories_instead_of_chat_or_api_reason_text(self) -> None:
+        await self.plugin.record_interaction(message("麦麦，谢谢你！", user="thanks-user", event="thanks-label"))
+        await self.plugin.record_interaction(message("麦麦，我讨厌你", user="negative-user", event="negative-label"))
+        await self.plugin.adjust_affection(
+            "qq", "api-user", "stream-1", "api-label", 1, reason="用户传来的详细原始聊天内容，不应写进好感度库"
+        )
+        reasons = await self.plugin.store.run(
+            lambda: dict(self.plugin.store.db.execute("SELECT event_id,reason FROM events"))
+        )
+        self.assertEqual(reasons, {"thanks-label": "感谢", "negative-label": "反感", "api-label": "插件上报"})
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
+    async def test_public_adjust_api_preserves_limits_and_message_deduplication(self) -> None:
+        for delta in (0, 11, -11, 1.5, True, "1"):
+            with self.subTest(delta=delta):
+                result = await self.plugin.adjust_affection("qq", "u1", "stream-1", "invalid", delta)
+                self.assertFalse(result["accepted"])
+        self.assertFalse((await self.plugin.adjust_affection("qq", "u1", "stream-1", "", 1))["accepted"])
+        with patch.object(plugin_module.time, "time", return_value=1000):
+            first = await self.plugin.adjust_affection("qq", "u1", "stream-1", "external", 10)
+            duplicate = await self.plugin.adjust_affection("qq", "u1", "stream-1", "external", -10)
+            await self.plugin.record_interaction(message("我爱你", event="external"))
+        self.assertEqual(first, {"accepted": True, "score": 10})
+        self.assertEqual(duplicate, {"accepted": False, "score": 10})
+        self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], 10)
+        with patch.object(plugin_module.time, "time", return_value=1001):
+            opposite = await self.plugin.adjust_affection("qq", "u1", "stream-1", "opposite", -10)
+        self.assertEqual(opposite, {"accepted": True, "score": 0})
         self.assertEqual(self.host.count("llm.generate"), 0)
 
     async def test_query_intercepts_and_generates_once(self) -> None:
@@ -665,8 +1081,8 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         for i, query in enumerate(
             (
                 message("他问你喜欢我吗"),
-                message("", segments=[{"type": "reply", "data": {"text": "你喜欢我吗"}}]),
-                message("", segments=[{"type": "forward", "data": {"text": "我的好感度是多少"}}]),
+                message("", segments=[quoted("你喜欢我吗")]),
+                message("", segments=[forwarded("我的好感度是多少")]),
             )
         ):
             query["message_id"] = f"not-query-{i}"
@@ -721,6 +1137,25 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual((await self.plugin.get_affection("qq", f"placeholder-{i}"))["score"], 0)
         self.assertEqual(self.host.count("llm.generate"), 0)
 
+    async def test_successful_host_asr_scores_current_utterance_without_model_call(self) -> None:
+        for i, (text, expected) in enumerate(
+            (("谢谢你", 1), ("我喜欢你", 2), ("我爱你", 3), ("我恨你", -3), ("你刚才那句话让我不舒服", 0))
+        ):
+            user = f"asr-score-{i}"
+            interaction = message(
+                "",
+                group=True,
+                at="12345",
+                user=user,
+                event=user,
+                segments=[{"type": "voice", "data": f"[语音: {text}]"}],
+                processed_plain_text=f"@麦麦 [语音: {text}]",
+            )
+            with self.subTest(text=text):
+                await self.plugin.record_interaction(interaction)
+                self.assertEqual((await self.plugin.get_affection("qq", user))["score"], expected)
+        self.assertEqual(self.host.count("llm.generate"), 0)
+
     async def test_bot_config_reload_updates_name_and_persona(self) -> None:
         await self.plugin.on_config_update(
             ON_BOT_CONFIG_RELOAD,
@@ -752,7 +1187,7 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
         self.plugin.set_plugin_config(data)
         await self.plugin.on_config_update("self", data, "2")
         await self.plugin.record_interaction(message("阿麦，谢谢你", group=True, event="new-score"))
-        self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], 4)
+        self.assertEqual((await self.plugin.get_affection("qq", "u1"))["score"], 3)
         await self.plugin.query_affection(message("阿麦你喜欢我吗", group=True, event="new-query"), "stream-1")
         await self.finish_replies()
         self.assertEqual(self.host.arguments("llm.generate")[0]["max_tokens"], 72)

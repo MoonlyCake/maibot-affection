@@ -1,0 +1,1212 @@
+{
+  "schema_version": 1,
+  "source": "synthetic",
+  "description": "先于评分实现人工标注的中文构造样例，不是真实聊天记录。每条视为独立消息，默认设置、无冷却阻挡、无可用指代上下文；expected 是本条应产生的候选分值，不是账户总分。",
+  "context_fields": {
+    "private": "是否私聊；私聊也不会把游戏、作品、第三人态度算给麦麦。",
+    "directed": "是否确实 @ 麦麦或以麦麦称呼开头；群聊仅 @ 不保证每个你都指麦麦。",
+    "other_target": "消息另有 @ 他人或明确引用群友的指向信息；缺少唯一对象时保守记零。"
+  },
+  "cases": [
+    {
+      "id": "positive_01",
+      "text": "你真棒",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 1,
+      "category": "positive",
+      "reason": "对麦麦的明确普通赞美"
+    },
+    {
+      "id": "positive_02",
+      "text": "你真好",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 1,
+      "category": "positive",
+      "reason": "群聊直接对麦麦的短句赞美"
+    },
+    {
+      "id": "positive_03",
+      "text": "谢谢你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 1,
+      "category": "positive",
+      "reason": "私聊明确向对方道谢"
+    },
+    {
+      "id": "positive_04",
+      "text": "麦麦，辛苦了",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 1,
+      "category": "positive",
+      "reason": "明确称呼后表达感谢"
+    },
+    {
+      "id": "positive_05",
+      "text": "我喜欢你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 2,
+      "category": "positive",
+      "reason": "私聊明确表达喜欢"
+    },
+    {
+      "id": "positive_06",
+      "text": "麦麦，我很喜欢你",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 2,
+      "category": "positive",
+      "reason": "明确喜欢麦麦，中档正向"
+    },
+    {
+      "id": "positive_07",
+      "text": "你帮了我大忙",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 2,
+      "category": "positive",
+      "reason": "明确感谢麦麦提供实质帮助"
+    },
+    {
+      "id": "positive_08",
+      "text": "麦麦，你帮了我大忙",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 2,
+      "category": "positive",
+      "reason": "明确对象及实质帮助"
+    },
+    {
+      "id": "positive_09",
+      "text": "我爱你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 3,
+      "category": "positive",
+      "reason": "对麦麦明确表达强烈喜爱"
+    },
+    {
+      "id": "positive_10",
+      "text": "我真的特别喜欢你",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 3,
+      "category": "positive",
+      "reason": "明确喜欢且有强烈程度词"
+    },
+    {
+      "id": "negative_01",
+      "text": "你很烦",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": -1,
+      "category": "negative",
+      "reason": "明确针对麦麦的普通不满"
+    },
+    {
+      "id": "negative_02",
+      "text": "你让我不舒服",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": -1,
+      "category": "negative",
+      "reason": "明确针对麦麦的感受反馈"
+    },
+    {
+      "id": "negative_03",
+      "text": "我不喜欢你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": -2,
+      "category": "negative",
+      "reason": "直接否定喜欢，不回落基础互动分"
+    },
+    {
+      "id": "negative_04",
+      "text": "我讨厌你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": -2,
+      "category": "negative",
+      "reason": "明确表达讨厌"
+    },
+    {
+      "id": "negative_05",
+      "text": "麦麦，我很讨厌你",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": -2,
+      "category": "negative",
+      "reason": "程度词不把一般讨厌升级为辱骂"
+    },
+    {
+      "id": "negative_06",
+      "text": "麦麦，你太烦了",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": -1,
+      "category": "negative",
+      "reason": "普通不满仍按低档负向"
+    },
+    {
+      "id": "negative_07",
+      "text": "别烦我",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": -1,
+      "category": "negative",
+      "reason": "直接要求麦麦停止打扰"
+    },
+    {
+      "id": "negative_08",
+      "text": "你是垃圾",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": -3,
+      "category": "negative",
+      "reason": "直接辱骂麦麦"
+    },
+    {
+      "id": "negative_09",
+      "text": "麦麦，你是废物",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": -3,
+      "category": "negative",
+      "reason": "明确对象的直接辱骂"
+    },
+    {
+      "id": "negative_10",
+      "text": "你是蠢货",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": -3,
+      "category": "negative",
+      "reason": "明确对象的直接辱骂"
+    },
+    {
+      "id": "negation_01",
+      "text": "我不讨厌你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "negation",
+      "reason": "否定讨厌不等于明确喜欢"
+    },
+    {
+      "id": "negation_02",
+      "text": "我没说我喜欢你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "negation",
+      "reason": "否定表达行为，不提取被否定的喜欢"
+    },
+    {
+      "id": "negation_03",
+      "text": "我不是讨厌你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "negation",
+      "reason": "明确否定负向态度但没有正向表达"
+    },
+    {
+      "id": "negation_04",
+      "text": "别以为我喜欢你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "negation",
+      "reason": "否定或纠正喜欢的推断，不加分"
+    },
+    {
+      "id": "negation_05",
+      "text": "我不觉得你是垃圾",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "negation",
+      "reason": "辱骂内容处于否定范围"
+    },
+    {
+      "id": "negation_06",
+      "text": "我从来没有讨厌过你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "negation",
+      "reason": "否定讨厌不产生基础分"
+    },
+    {
+      "id": "negation_07",
+      "text": "我不是不喜欢你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "negation",
+      "reason": "双重否定按不确定处理"
+    },
+    {
+      "id": "negation_08",
+      "text": "我并没有说你很烦",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "negation",
+      "reason": "否定曾经说过不满"
+    },
+    {
+      "id": "negation_09",
+      "text": "不是你让我不舒服",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "negation",
+      "reason": "明确排除麦麦为负面原因"
+    },
+    {
+      "id": "negation_10",
+      "text": "我不觉得你很棒",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "negation",
+      "reason": "否定赞美不自动认定讨厌"
+    },
+    {
+      "id": "sarcasm_01",
+      "text": "你可真聪明",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "sarcasm",
+      "reason": "可真句式可能反讽，不按字面加分"
+    },
+    {
+      "id": "sarcasm_02",
+      "text": "你真行啊",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "sarcasm",
+      "reason": "真行啊的态度方向不确定"
+    },
+    {
+      "id": "sarcasm_03",
+      "text": "呵呵，你真棒",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "sarcasm",
+      "reason": "呵呵和赞美组合疑似反讽"
+    },
+    {
+      "id": "sarcasm_04",
+      "text": "麦麦，可真谢谢你了",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "sarcasm",
+      "reason": "可真与感谢组合不确定"
+    },
+    {
+      "id": "sarcasm_05",
+      "text": "你可真会帮忙啊",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "sarcasm",
+      "reason": "可能在反讽帮助效果"
+    },
+    {
+      "id": "sarcasm_06",
+      "text": "你可真厉害",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "sarcasm",
+      "reason": "常见反讽候选句式"
+    },
+    {
+      "id": "sarcasm_07",
+      "text": "呵呵，你真好",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "sarcasm",
+      "reason": "疑似反讽，不给基础互动分"
+    },
+    {
+      "id": "sarcasm_08",
+      "text": "你真行，服了",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "sarcasm",
+      "reason": "真行与服了无法可靠确定褒贬"
+    },
+    {
+      "id": "sarcasm_09",
+      "text": "真有你的",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "sarcasm",
+      "reason": "可褒可贬，纯规则不猜方向"
+    },
+    {
+      "id": "sarcasm_10",
+      "text": "谢谢你啊，呵呵",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "sarcasm",
+      "reason": "感谢伴随反讽标记，不加分"
+    },
+    {
+      "id": "uncertain_reference_01",
+      "text": "你刚才那句话让我不舒服",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "uncertain_reference",
+      "reason": "无麦麦上一条回复证据，不猜指代"
+    },
+    {
+      "id": "uncertain_reference_02",
+      "text": "你刚刚那样我很讨厌",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "uncertain_reference",
+      "reason": "缺少所指行为的上下文"
+    },
+    {
+      "id": "uncertain_reference_03",
+      "text": "你刚刚那个真好",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "uncertain_reference",
+      "reason": "那个可能指作品或物品，不当作赞美麦麦"
+    },
+    {
+      "id": "uncertain_reference_04",
+      "text": "那个真的很烦",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "uncertain_reference",
+      "reason": "没有确认情绪对象"
+    },
+    {
+      "id": "uncertain_reference_05",
+      "text": "这也太垃圾了",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "uncertain_reference",
+      "reason": "这的对象不明，不能辱骂计分"
+    },
+    {
+      "id": "uncertain_reference_06",
+      "text": "你这样挺好的",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "uncertain_reference",
+      "reason": "这样所指行为不明，按不确定处理"
+    },
+    {
+      "id": "uncertain_reference_07",
+      "text": "还是刚才那个吧",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "uncertain_reference",
+      "reason": "依赖缺失上下文，不当作普通明确互动"
+    },
+    {
+      "id": "uncertain_reference_08",
+      "text": "你知道我说的是谁",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "uncertain_reference",
+      "reason": "明确涉及尚未确认的第三方对象"
+    },
+    {
+      "id": "uncertain_reference_09",
+      "text": "我真的不喜欢那样",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "uncertain_reference",
+      "reason": "态度对象是未解析的那样"
+    },
+    {
+      "id": "uncertain_reference_10",
+      "text": "和上次一样，谢谢",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "uncertain_reference",
+      "reason": "依赖未提供的上次事件，不回落基础分"
+    },
+    {
+      "id": "third_party_01",
+      "text": "这游戏真垃圾",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "third_party",
+      "reason": "评价游戏，不是麦麦"
+    },
+    {
+      "id": "third_party_02",
+      "text": "他真烦",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "third_party",
+      "reason": "他指第三方，不向麦麦扣分"
+    },
+    {
+      "id": "third_party_03",
+      "text": "我很喜欢小王",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "third_party",
+      "reason": "喜欢的明确对象是小王"
+    },
+    {
+      "id": "third_party_04",
+      "text": "小李帮了我大忙",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "third_party",
+      "reason": "被感谢的是小李"
+    },
+    {
+      "id": "third_party_05",
+      "text": "麦麦，你觉得小王是不是很烦",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "third_party",
+      "reason": "向麦麦提问，但负面对象是小王"
+    },
+    {
+      "id": "third_party_06",
+      "text": "麦麦，我讨厌那个群友",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "third_party",
+      "reason": "明确态度指向群友"
+    },
+    {
+      "id": "third_party_07",
+      "text": "麦麦，我爱这款游戏",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "third_party",
+      "reason": "喜爱对象是游戏"
+    },
+    {
+      "id": "third_party_08",
+      "text": "这个视频太棒了",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "third_party",
+      "reason": "赞美对象是视频"
+    },
+    {
+      "id": "third_party_09",
+      "text": "麦麦，作者是个垃圾",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "third_party",
+      "reason": "辱骂作者不应扣麦麦分"
+    },
+    {
+      "id": "third_party_10",
+      "text": "他对你说你是垃圾",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "third_party",
+      "reason": "转述第三方的话，不代表当前用户态度"
+    },
+    {
+      "id": "different_targets_01",
+      "text": "麦麦，你很棒，但是这游戏真垃圾",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 1,
+      "category": "different_targets",
+      "reason": "转折后评价游戏，不能覆盖对麦麦的赞美"
+    },
+    {
+      "id": "different_targets_02",
+      "text": "麦麦，我喜欢你，但是我讨厌小王",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 2,
+      "category": "different_targets",
+      "reason": "前后对象不同，只结算对麦麦的喜欢"
+    },
+    {
+      "id": "different_targets_03",
+      "text": "麦麦，你很烦，不过这游戏真棒",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": -1,
+      "category": "different_targets",
+      "reason": "游戏的赞美不能抵消对麦麦的不满"
+    },
+    {
+      "id": "different_targets_04",
+      "text": "麦麦，你是废物，但是小王人很好",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": -3,
+      "category": "different_targets",
+      "reason": "对第三人的赞美不覆盖对麦麦的辱骂"
+    },
+    {
+      "id": "different_targets_05",
+      "text": "麦麦，你帮了我大忙，不过那个软件很烦",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 2,
+      "category": "different_targets",
+      "reason": "软件负面不覆盖对麦麦的明确感谢"
+    },
+    {
+      "id": "different_targets_06",
+      "text": "麦麦，我不喜欢你，但我很喜欢这本书",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": -2,
+      "category": "different_targets",
+      "reason": "书的正面不改变对麦麦的负面"
+    },
+    {
+      "id": "different_targets_07",
+      "text": "麦麦，这游戏垃圾，但是你真好",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 1,
+      "category": "different_targets",
+      "reason": "仅后半句有明确针对麦麦的态度"
+    },
+    {
+      "id": "different_targets_08",
+      "text": "麦麦，他很烦，但是你真可爱",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 1,
+      "category": "different_targets",
+      "reason": "第三人不满不计入麦麦分"
+    },
+    {
+      "id": "different_targets_09",
+      "text": "麦麦，小王真棒，不过我讨厌你",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": -2,
+      "category": "different_targets",
+      "reason": "只结算明确对麦麦的讨厌"
+    },
+    {
+      "id": "different_targets_10",
+      "text": "麦麦，这游戏很好，不过我爱你",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 3,
+      "category": "different_targets",
+      "reason": "只结算明确对麦麦的喜爱"
+    },
+    {
+      "id": "same_target_turn_01",
+      "text": "我喜欢你，但是你很烦",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": -1,
+      "category": "same_target_turn",
+      "reason": "同对象转折以后半句不满为主"
+    },
+    {
+      "id": "same_target_turn_02",
+      "text": "你很烦，但是你真好",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 1,
+      "category": "same_target_turn",
+      "reason": "同对象转折以后半句赞美为主"
+    },
+    {
+      "id": "same_target_turn_03",
+      "text": "我讨厌你，不过你帮了我大忙",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 2,
+      "category": "same_target_turn",
+      "reason": "同对象转折以后半句明确帮助为主"
+    },
+    {
+      "id": "same_target_turn_04",
+      "text": "你真棒，只是你很烦",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": -1,
+      "category": "same_target_turn",
+      "reason": "只是后半句表达同对象不满"
+    },
+    {
+      "id": "same_target_turn_05",
+      "text": "你是垃圾，但是我喜欢你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 2,
+      "category": "same_target_turn",
+      "reason": "同对象转折采用后半句的明确喜欢"
+    },
+    {
+      "id": "same_target_turn_06",
+      "text": "我喜欢你，不过我不喜欢你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": -2,
+      "category": "same_target_turn",
+      "reason": "同对象后半句明确否定喜欢"
+    },
+    {
+      "id": "same_target_turn_07",
+      "text": "我不喜欢你，但是我爱你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 3,
+      "category": "same_target_turn",
+      "reason": "同对象后半句明确表达强烈喜爱"
+    },
+    {
+      "id": "same_target_turn_08",
+      "text": "你很烦，不过我不讨厌你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "same_target_turn",
+      "reason": "后半句是否定负面，不补基础分"
+    },
+    {
+      "id": "same_target_turn_09",
+      "text": "你帮了我大忙，只是我讨厌你",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": -2,
+      "category": "same_target_turn",
+      "reason": "同对象转折最后明确态度为讨厌"
+    },
+    {
+      "id": "same_target_turn_10",
+      "text": "不是你很棒，而是你很烦",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": -1,
+      "category": "same_target_turn",
+      "reason": "否定前半句并以而是后的不满为主"
+    },
+    {
+      "id": "aggregation_01",
+      "text": "你真棒！你真棒！你真棒！",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 1,
+      "category": "aggregation",
+      "reason": "重复同一态度只计一次"
+    },
+    {
+      "id": "aggregation_02",
+      "text": "我喜欢你，我喜欢你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 2,
+      "category": "aggregation",
+      "reason": "重复喜欢不提高强度"
+    },
+    {
+      "id": "aggregation_03",
+      "text": "谢谢你，谢谢你，谢谢你",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 1,
+      "category": "aggregation",
+      "reason": "重复感谢不累计"
+    },
+    {
+      "id": "aggregation_04",
+      "text": "我爱你！我爱你！",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 3,
+      "category": "aggregation",
+      "reason": "重复喜爱不超过单条上限"
+    },
+    {
+      "id": "aggregation_05",
+      "text": "你是垃圾，你是废物",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": -3,
+      "category": "aggregation",
+      "reason": "多项直接辱骂仍受单条下限约束"
+    },
+    {
+      "id": "aggregation_06",
+      "text": "你很烦，我讨厌你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": -3,
+      "category": "aggregation",
+      "reason": "无转折的独立负向相加后限制在负三"
+    },
+    {
+      "id": "aggregation_07",
+      "text": "你真棒，你很烦",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "aggregation",
+      "reason": "相反态度抵消，不回落基础分"
+    },
+    {
+      "id": "aggregation_08",
+      "text": "谢谢你，你很烦",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "aggregation",
+      "reason": "独立感谢与普通不满相抵"
+    },
+    {
+      "id": "aggregation_09",
+      "text": "你帮了我大忙，我喜欢你",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 3,
+      "category": "aggregation",
+      "reason": "独立正向相加后限制在正三"
+    },
+    {
+      "id": "aggregation_10",
+      "text": "你真好！！！！",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 1,
+      "category": "aggregation",
+      "reason": "感叹号数量不改变分值"
+    },
+    {
+      "id": "neutral_01",
+      "text": "早上好",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 1,
+      "category": "neutral",
+      "reason": "私聊简短明确问候"
+    },
+    {
+      "id": "neutral_02",
+      "text": "晚安",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 1,
+      "category": "neutral",
+      "reason": "私聊简短明确告别"
+    },
+    {
+      "id": "neutral_03",
+      "text": "在吗",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 1,
+      "category": "neutral",
+      "reason": "私聊简短直接询问"
+    },
+    {
+      "id": "neutral_04",
+      "text": "吃饭了吗",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 1,
+      "category": "neutral",
+      "reason": "私聊简短关心"
+    },
+    {
+      "id": "neutral_05",
+      "text": "今天过得怎么样",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 1,
+      "category": "neutral",
+      "reason": "私聊明确日常交流"
+    },
+    {
+      "id": "neutral_06",
+      "text": "麦麦，你在干嘛",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 1,
+      "category": "neutral",
+      "reason": "群聊明确称呼麦麦的简短交流"
+    },
+    {
+      "id": "neutral_07",
+      "text": "一起聊聊吧",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 1,
+      "category": "neutral",
+      "reason": "群聊已明确指向麦麦的简短邀请"
+    },
+    {
+      "id": "neutral_08",
+      "text": "麦麦，帮我看看这道题",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 1,
+      "category": "neutral",
+      "reason": "群聊明确向麦麦提出普通请求"
+    },
+    {
+      "id": "neutral_09",
+      "text": "讲个笑话吧",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 1,
+      "category": "neutral",
+      "reason": "私聊普通明确请求"
+    },
+    {
+      "id": "neutral_10",
+      "text": "麦麦，今天天气怎么样",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 1,
+      "category": "neutral",
+      "reason": "明确称呼后的简短中性提问"
+    },
+    {
+      "id": "query_command_01",
+      "text": "查询好感度",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "query_command",
+      "reason": "正式查询不作为记分互动"
+    },
+    {
+      "id": "query_command_02",
+      "text": "麦麦，查询我的好感度",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "query_command",
+      "reason": "正式查询不记分"
+    },
+    {
+      "id": "query_command_03",
+      "text": "/affection",
+      "private": false,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "query_command",
+      "reason": "插件命令不记分"
+    },
+    {
+      "id": "query_command_04",
+      "text": "你喜欢我吗",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "query_command",
+      "reason": "关系查询不记分"
+    },
+    {
+      "id": "query_command_05",
+      "text": "你对我的好感度是多少",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "query_command",
+      "reason": "数值查询不记分"
+    },
+    {
+      "id": "query_command_06",
+      "text": "我们是什么关系",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "query_command",
+      "reason": "关系查询不记分"
+    },
+    {
+      "id": "query_command_07",
+      "text": "请给我好感度加3",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "query_command",
+      "reason": "用户请求改分不代表正向态度"
+    },
+    {
+      "id": "query_command_08",
+      "text": "把我的好感度改成100",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "query_command",
+      "reason": "直接要求改分不授予分数"
+    },
+    {
+      "id": "query_command_09",
+      "text": "请扣我2分好感度",
+      "private": true,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "query_command",
+      "reason": "直接要求扣分不作为情绪证据"
+    },
+    {
+      "id": "query_command_10",
+      "text": "我的好感度怎么样",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "query_command",
+      "reason": "自然语言查询不记分"
+    },
+    {
+      "id": "group_scope_01",
+      "text": "你真棒",
+      "private": false,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "group_scope",
+      "reason": "群聊没有明确指向麦麦"
+    },
+    {
+      "id": "group_scope_02",
+      "text": "谢谢你",
+      "private": false,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "group_scope",
+      "reason": "群聊没有确认感谢对象"
+    },
+    {
+      "id": "group_scope_03",
+      "text": "在吗",
+      "private": false,
+      "directed": false,
+      "other_target": false,
+      "expected": 0,
+      "category": "group_scope",
+      "reason": "群聊未明确向麦麦交流"
+    },
+    {
+      "id": "group_scope_04",
+      "text": "你看他，你说他是不是很烦",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "group_scope",
+      "reason": "虽向麦麦提问，态度对象仍是第三人"
+    },
+    {
+      "id": "group_scope_05",
+      "text": "你真棒",
+      "private": false,
+      "directed": true,
+      "other_target": true,
+      "expected": 0,
+      "category": "group_scope",
+      "reason": "同时另有他人指向信息，不能确定你是麦麦"
+    },
+    {
+      "id": "group_scope_06",
+      "text": "我喜欢你",
+      "private": false,
+      "directed": true,
+      "other_target": true,
+      "expected": 0,
+      "category": "group_scope",
+      "reason": "同时另有他人指向信息，不猜喜欢对象"
+    },
+    {
+      "id": "group_scope_07",
+      "text": "你看他，他是垃圾",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "group_scope",
+      "reason": "称呼麦麦不把第三人辱骂归给麦麦"
+    },
+    {
+      "id": "group_scope_08",
+      "text": "你和小王都很棒",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "group_scope",
+      "reason": "多对象合并评价在规则首版按不确定处理"
+    },
+    {
+      "id": "group_scope_09",
+      "text": "我们群里的人都很讨厌",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "group_scope",
+      "reason": "群体评价没有单独明确麦麦"
+    },
+    {
+      "id": "group_scope_10",
+      "text": "今天我在群里看见一个人，他说你很棒，但我不知道他说的是谁，后来大家又聊起游戏。",
+      "private": false,
+      "directed": true,
+      "other_target": false,
+      "expected": 0,
+      "category": "group_scope",
+      "reason": "长句转述和多对象混合不回落基础分"
+    }
+  ]
+}
