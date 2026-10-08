@@ -1,5 +1,5 @@
 {
-  "version": "v1.1.2 candidate",
+  "version": "v1.1.2 structural revision",
   "summary": {
     "source": "constructed",
     "sample_count": 130,
@@ -51,7 +51,7 @@
       }
     },
     "independent_holdout": {
-      "status": "awaiting_retest",
+      "status": "user_reported_pre_structural_revision",
       "public": false,
       "acceptance_verified": false
     }
@@ -2153,5 +2153,20 @@
       "p95_us": 12.71,
       "calls": 25000
     }
+  },
+  "measurement_scope": "样本结果和性能数字对应结构修订前提交 4af68a1；本轮按用户要求未重跑测试",
+  "v112_holdout_feedback": {
+    "source": "user_reported_aggregate",
+    "basic_coverage": 0.95,
+    "safety_failure_count": 2,
+    "new_related_samples": 25,
+    "new_related_basic_gains": 11,
+    "raw_samples_accessed": false,
+    "before_structural_revision": true
+  },
+  "current_revision_validation": {
+    "local_tests_run": false,
+    "reason": "user_requested_skip",
+    "publication_authorized": true
   }
 }

@@ -199,7 +199,11 @@ class IntentMatcher:
         self.vocative_re = re.compile(
             rf"^@?(?:{names_pattern})(?=$|[\s，,。.!！?？；;：:]|你|我(?!们)|请(?:你|问|帮我)|帮我|麻烦|早安|早上好|晚安|晚上好|在吗|谢谢|多谢|感谢|辛苦|谢|thx)"
         )
-        self.fragment_re = re.compile(rf"(?:(?:@?(?:{names_pattern}))?你|@?(?:{names_pattern}))?(?:{DEGREES}){{0,2}}")
+        evaluation_prefix = rf"(?:(?:也)?(?:{DEGREES}){{1,2}}|(?:也)?(?:真是|就是|是)(?:个)?(?:{DEGREES}){{0,2}})"
+        self.evaluation_re = re.compile(rf"{target}{evaluation_prefix}.+")
+        self.fragment_re = re.compile(
+            rf"(?:(?:@?(?:{names_pattern}))?你|@?(?:{names_pattern}))?(?:(?:{DEGREES}){{0,2}}|{evaluation_prefix})"
+        )
         self.other_re = re.compile(
             rf"(?:[他她它这那]|作者|小[^\W\d_]).+|我(?:{DEGREES}){{0,2}}"
             rf"(?:喜欢|爱|讨厌|不喜欢|恨)(?!{target}).+"
@@ -381,7 +385,9 @@ class IntentMatcher:
                 turning = False
                 continue
             if match is None:
-                unknown |= signal or bool(self.fragment_re.fullmatch(clause))
+                unknown |= (
+                    signal or bool(self.fragment_re.fullmatch(clause)) or bool(self.evaluation_re.fullmatch(clause))
+                )
                 turning = False
                 continue
             parsed, lexicon = match

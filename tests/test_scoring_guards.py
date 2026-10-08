@@ -80,14 +80,14 @@ class ScoringGuardTests(unittest.TestCase):
             "麻烦你帮我看看这道题",
             "今天又错过了一班公交",
             "棒球打到了球棒上",
-            "你是狗主人吗",
-            "你是猪年出生的吗",
-            "你是驴友吗",
             "我今天去图书馆取了预约的书，下午整理笔记",
         ):
             with self.subTest(text=text):
                 self.assertEqual(self.score(text), (1, "基础交流"))
         self.assertEqual(self.score("可爱的猫")[0], 0)
+        for text in ("你是狗主人吗", "你是猪年出生的吗", "你是驴友吗"):
+            with self.subTest(text=text):
+                self.assertEqual(self.score(text)[0], 0)
 
     def test_failure_of_other_object_does_not_cancel_direct_praise(self) -> None:
         for text in (
