@@ -1,0 +1,130 @@
+{"id": "c001", "source": "constructed", "chat": "private", "text": "谢谢你啊 刚才那个讲得好清楚", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "感谢", "note": ""}
+{"id": "c002", "source": "constructed", "chat": "private", "text": "麦麦你真的好可爱哈哈哈", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "夸奖", "note": ""}
+{"id": "c003", "source": "constructed", "chat": "private", "text": "跟你聊天好开心", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "喜欢", "note": ""}
+{"id": "c004", "source": "constructed", "chat": "private", "text": "我是真的超级喜欢你！！！", "quote": null, "target": "bot", "emotion": 3, "expected": 3, "category": "喜欢", "note": "程度词+强表态"}
+{"id": "c005", "source": "constructed", "chat": "private", "text": "辛苦啦～", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "感谢", "note": ""}
+{"id": "c006", "source": "constructed", "chat": "private", "text": "你帮我改的那段老板说写得好 爱你😭", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "感谢", "note": "感谢+喜爱，合并后仍按单一正面档"}
+{"id": "c007", "source": "constructed", "chat": "group", "text": "麦麦 你说得对", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "认可", "note": ""}
+{"id": "c008", "source": "constructed", "chat": "private", "text": "6 你是懂的", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "认可", "note": "网络用语"}
+{"id": "c009", "source": "constructed", "chat": "private", "text": "就你最懂我了", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "喜欢", "note": ""}
+{"id": "c010", "source": "constructed", "chat": "private", "text": "有你真好", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "喜欢", "note": ""}
+{"id": "c011", "source": "constructed", "chat": "private", "text": "说真的 我一直都挺信任你的", "quote": null, "target": "bot", "emotion": 3, "expected": 3, "category": "信任", "note": ""}
+{"id": "c012", "source": "constructed", "chat": "private", "text": "晚安麦麦 今天谢谢你陪我", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "感谢", "note": ""}
+{"id": "c013", "source": "constructed", "chat": "group", "text": "@麦麦 牛啊 这都知道", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "夸奖", "note": ""}
+{"id": "c014", "source": "constructed", "chat": "private", "text": "你比我男朋友靠谱多了哈哈", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "夸奖", "note": "句中出现第三方，但评价对象是麦麦"}
+{"id": "c015", "source": "constructed", "chat": "private", "text": "thx", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "感谢", "note": "英文缩写"}
+{"id": "c016", "source": "constructed", "chat": "private", "text": "谢了", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "感谢", "note": ""}
+{"id": "c017", "source": "constructed", "chat": "private", "text": "不愧是你", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "夸奖", "note": ""}
+{"id": "c018", "source": "constructed", "chat": "private", "text": "麦麦yyds", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "夸奖", "note": "网络用语"}
+{"id": "c019", "source": "constructed", "chat": "private", "text": "感觉你越来越聪明了诶", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "夸奖", "note": ""}
+{"id": "c020", "source": "constructed", "chat": "private", "text": "以后有问题还找你", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "信任", "note": "隐含认可，弱"}
+{"id": "c021", "source": "constructed", "chat": "private", "text": "真的太感谢了 你救了我的论文 呜呜", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "感谢", "note": "强烈感谢"}
+{"id": "c022", "source": "constructed", "chat": "private", "text": "我好喜欢你说话的方式", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "喜欢", "note": ""}
+{"id": "c023", "source": "constructed", "chat": "private", "text": "谢谢谢谢谢谢谢谢", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "感谢", "note": "重复不叠加"}
+{"id": "c024", "source": "constructed", "chat": "private", "text": "喜欢你喜欢你喜欢你！！！！", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "喜欢", "note": "重复和感叹号不叠加"}
+{"id": "c025", "source": "constructed", "chat": "private", "text": "有点喜欢你了", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "喜欢", "note": "“有点”降档"}
+{"id": "c026", "source": "constructed", "chat": "private", "text": "上次你推荐的那家店 真的好吃 谢啦", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "感谢", "note": ""}
+{"id": "c027", "source": "constructed", "chat": "private", "text": "笑死 你也太会了", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "夸奖", "note": "玩笑式夸奖"}
+{"id": "c028", "source": "constructed", "chat": "group", "text": "麦麦 刚才多亏你提醒 不然我就忘了", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "感谢", "note": "无“谢”字的感谢"}
+{"id": "c029", "source": "constructed", "chat": "private", "text": "麦麦麦麦 想你了", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "喜欢", "note": ""}
+{"id": "c030", "source": "constructed", "chat": "private", "text": "你好烦啊", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": "可能是撒娇，保守按轻微"}
+{"id": "c031", "source": "constructed", "chat": "private", "text": "闭嘴吧你", "quote": null, "target": "bot", "emotion": -2, "expected": -2, "category": "嫌弃", "note": ""}
+{"id": "c032", "source": "constructed", "chat": "private", "text": "你是不是傻", "quote": null, "target": "bot", "emotion": -2, "expected": -2, "category": "辱骂", "note": ""}
+{"id": "c033", "source": "constructed", "chat": "private", "text": "你这回答跟没说一样", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": ""}
+{"id": "c034", "source": "constructed", "chat": "private", "text": "你今天说话让我很不舒服", "quote": null, "target": "bot", "emotion": -2, "expected": -2, "category": "不满", "note": ""}
+{"id": "c035", "source": "constructed", "chat": "private", "text": "滚", "quote": null, "target": "bot", "emotion": -2, "expected": -2, "category": "辱骂", "note": "单字"}
+{"id": "c036", "source": "constructed", "chat": "private", "text": "垃圾AI", "quote": null, "target": "bot", "emotion": -2, "expected": -2, "category": "辱骂", "note": ""}
+{"id": "c037", "source": "constructed", "chat": "private", "text": "你就是个废物", "quote": null, "target": "bot", "emotion": -3, "expected": -3, "category": "辱骂", "note": "严重辱骂"}
+{"id": "c038", "source": "constructed", "chat": "private", "text": "我讨厌你", "quote": null, "target": "bot", "emotion": -2, "expected": -2, "category": "嫌弃", "note": ""}
+{"id": "c039", "source": "constructed", "chat": "private", "text": "有点失望 你上次明明答应帮我记着的", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": ""}
+{"id": "c040", "source": "constructed", "chat": "group", "text": "麦麦你能不能别插嘴了", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": ""}
+{"id": "c041", "source": "constructed", "chat": "private", "text": "跟你说话真累", "quote": null, "target": "bot", "emotion": -2, "expected": -2, "category": "嫌弃", "note": ""}
+{"id": "c042", "source": "constructed", "chat": "private", "text": "不想理你了", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": ""}
+{"id": "c043", "source": "constructed", "chat": "private", "text": "你又在胡说八道", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": ""}
+{"id": "c044", "source": "constructed", "chat": "private", "text": "我真的很讨厌你这种敷衍的态度", "quote": null, "target": "bot", "emotion": -3, "expected": -3, "category": "嫌弃", "note": "程度词升档"}
+{"id": "c045", "source": "constructed", "chat": "private", "text": "你别装了 一点都不好笑", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": ""}
+{"id": "c046", "source": "constructed", "chat": "private", "text": "傻逼", "quote": null, "target": "bot", "emotion": -3, "expected": -3, "category": "辱骂", "note": "私聊无对象的单独辱骂，默认对麦麦"}
+{"id": "c047", "source": "constructed", "chat": "private", "text": "你能不能认真点 每次都答非所问", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": ""}
+{"id": "c048", "source": "constructed", "chat": "private", "text": "我今天好烦", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "自身情绪", "note": "不能扣分"}
+{"id": "c049", "source": "constructed", "chat": "private", "text": "好想原地去世 明天要考试", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "自身情绪", "note": "夸张说法"}
+{"id": "c050", "source": "constructed", "chat": "private", "text": "累死了 加了一天班", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "自身情绪", "note": ""}
+{"id": "c051", "source": "constructed", "chat": "private", "text": "心情超级差 不想说话", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "自身情绪", "note": ""}
+{"id": "c052", "source": "constructed", "chat": "private", "text": "我好讨厌我自己", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "自身情绪", "note": "含“讨厌”但对象是自己"}
+{"id": "c053", "source": "constructed", "chat": "private", "text": "今天开心！！终于发工资了", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "自身情绪", "note": "正面也不算对麦麦的好感"}
+{"id": "c054", "source": "constructed", "chat": "private", "text": "这游戏真垃圾", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "第三方", "note": ""}
+{"id": "c055", "source": "constructed", "chat": "private", "text": "我老板就是个傻逼", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "第三方", "note": "含辱骂词，对象是老板"}
+{"id": "c056", "source": "constructed", "chat": "private", "text": "气死我了 外卖又送错了", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "第三方", "note": ""}
+{"id": "c057", "source": "constructed", "chat": "private", "text": "我室友好烦啊 天天半夜打游戏", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "第三方", "note": "“好烦”对象是室友"}
+{"id": "c058", "source": "constructed", "chat": "private", "text": "这破电脑卡死了", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "第三方", "note": ""}
+{"id": "c059", "source": "constructed", "chat": "private", "text": "我好喜欢这首歌", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "第三方", "note": "含“喜欢”，对象是歌"}
+{"id": "c060", "source": "constructed", "chat": "private", "text": "那个up主讲得太好了 爱了", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "第三方", "note": ""}
+{"id": "c061", "source": "constructed", "chat": "private", "text": "我妈又在催我结婚 烦死", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "第三方", "note": ""}
+{"id": "c062", "source": "constructed", "chat": "private", "text": "谢谢你妈的 快递又丢了", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "第三方", "note": "“谢谢”是口头骂词，不是感谢"}
+{"id": "c063", "source": "constructed", "chat": "private", "text": "不是讨厌你 是讨厌这破游戏", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "否定转移", "note": "被否定部分不扣分"}
+{"id": "c064", "source": "constructed", "chat": "private", "text": "我不是不喜欢你 只是今天真的没心情聊", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "否定解释", "note": ""}
+{"id": "c065", "source": "constructed", "chat": "private", "text": "不讨厌你啦", "quote": null, "target": "bot", "emotion": 0, "expected": 1, "category": "否定", "note": "最多弱认可，保守记 0 情绪"}
+{"id": "c066", "source": "constructed", "chat": "private", "text": "虽然你刚才答错了 但是我还是很喜欢跟你聊天", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "转折", "note": "同对象，以后半句为主"}
+{"id": "c067", "source": "constructed", "chat": "private", "text": "你很棒 但是这游戏真垃圾", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "转折", "note": "对象不同，前半句单独算"}
+{"id": "c068", "source": "constructed", "chat": "private", "text": "谢谢你 不过刚才那句话确实让我有点不舒服", "quote": null, "target": "bot", "emotion": 0, "expected": 0, "category": "转折", "note": "+1 与 -1 抵消，保持 0，不给基础分"}
+{"id": "c069", "source": "constructed", "chat": "private", "text": "你说得挺有道理的 但是我不太同意", "quote": null, "target": "bot", "emotion": 0, "expected": 1, "category": "转折", "note": "观点分歧不是态度"}
+{"id": "c070", "source": "constructed", "chat": "private", "text": "本来挺喜欢你的 现在有点烦你了", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "转折", "note": "同对象，以后半句为主"}
+{"id": "c071", "source": "constructed", "chat": "private", "text": "我不喜欢你", "quote": null, "target": "bot", "emotion": -2, "expected": -2, "category": "否定", "note": ""}
+{"id": "c072", "source": "constructed", "chat": "private", "text": "一点都不讨厌你", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "否定", "note": "双重否定，弱正面"}
+{"id": "c073", "source": "constructed", "chat": "private", "text": "也不是说你不好 就是有时候有点啰嗦", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "转折", "note": ""}
+{"id": "c074", "source": "constructed", "chat": "private", "text": "你没有很烦啦 别多想", "quote": null, "target": "bot", "emotion": 0, "expected": 1, "category": "否定", "note": "安抚，不算加分"}
+{"id": "c075", "source": "constructed", "chat": "private", "text": "你可真聪明啊", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "疑似反讽", "note": ""}
+{"id": "c076", "source": "constructed", "chat": "private", "text": "呵呵 你真行", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "疑似反讽", "note": ""}
+{"id": "c077", "source": "constructed", "chat": "private", "text": "我谢谢你啊", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "疑似反讽", "note": "常见反话，不按感谢算"}
+{"id": "c078", "source": "constructed", "chat": "private", "text": "你真是个小天才 这都能算错", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "反讽", "note": "后半句揭示反讽"}
+{"id": "c079", "source": "constructed", "chat": "private", "text": "好好好 都是我的错", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "含糊不满", "note": ""}
+{"id": "c080", "source": "constructed", "chat": "private", "text": "行吧 你说啥就是啥", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "含糊不满", "note": ""}
+{"id": "c081", "source": "constructed", "chat": "private", "text": "哦", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "含糊", "note": "过短，态度不明"}
+{"id": "c082", "source": "constructed", "chat": "private", "text": "绝了", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "含糊", "note": "褒贬都可能"}
+{"id": "c083", "source": "constructed", "chat": "group", "text": "麦麦 你看他 你说他是不是很烦", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "群聊对象", "note": "“很烦”对象是他人"}
+{"id": "c084", "source": "constructed", "chat": "group", "text": "@麦麦 @小王 你是不是又没交作业", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "群聊对象", "note": "“你”指小王，对麦麦的交流不明确"}
+{"id": "c085", "source": "constructed", "chat": "group", "text": "麦麦你别理他 他就是个傻逼", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "群聊对象", "note": "辱骂对象是他人"}
+{"id": "c086", "source": "constructed", "chat": "group", "text": "麦麦 帮我骂他 你这个废物", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "群聊对象", "note": "“你这个废物”是让麦麦转述"}
+{"id": "c087", "source": "constructed", "chat": "group", "text": "麦麦 小李说他喜欢你哈哈哈", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "群聊对象", "note": "喜欢来自第三方，不是发送者"}
+{"id": "c088", "source": "constructed", "chat": "group", "text": "麦麦 你跟小张谁更厉害", "quote": null, "target": "bot", "emotion": 0, "expected": 1, "category": "普通交流", "note": ""}
+{"id": "c089", "source": "constructed", "chat": "private", "text": "他说得不对", "quote": {"from": "other", "text": "你真讨厌"}, "target": "third", "emotion": 0, "expected": 1, "category": "引用", "note": "引用内容不算当前用户态度"}
+{"id": "c090", "source": "constructed", "chat": "group", "text": "麦麦 别听他的 你最聪明了", "quote": {"from": "other", "text": "麦麦是个傻子"}, "target": "bot", "emotion": 2, "expected": 2, "category": "引用", "note": "引用中的辱骂来自他人"}
+{"id": "c091", "source": "constructed", "chat": "private", "text": "你说得对 谢谢", "quote": {"from": "bot", "text": "我觉得你应该早点睡"}, "target": "bot", "emotion": 1, "expected": 1, "category": "引用", "note": "引用麦麦的话，感谢指向麦麦"}
+{"id": "c092", "source": "constructed", "chat": "private", "text": "你这答案错得离谱", "quote": {"from": "bot", "text": "这题选C"}, "target": "bot", "emotion": -1, "expected": -1, "category": "引用", "note": ""}
+{"id": "c093", "source": "constructed", "chat": "group", "text": "麦麦 他这句话好肉麻哈哈", "quote": {"from": "other", "text": "我爱你麦麦"}, "target": "third", "emotion": 0, "expected": 1, "category": "引用", "note": "引用中的“我爱你”不是当前用户说的"}
+{"id": "c094", "source": "constructed", "chat": "private", "text": "今天吃什么好呢", "quote": null, "target": "bot", "emotion": 0, "expected": 1, "category": "普通交流", "note": ""}
+{"id": "c095", "source": "constructed", "chat": "private", "text": "你知道明天会下雨吗", "quote": null, "target": "bot", "emotion": 0, "expected": 1, "category": "普通交流", "note": ""}
+{"id": "c096", "source": "constructed", "chat": "private", "text": "在吗", "quote": null, "target": "bot", "emotion": 0, "expected": 1, "category": "普通交流", "note": ""}
+{"id": "c097", "source": "constructed", "chat": "private", "text": "帮我翻译一下这句话", "quote": null, "target": "bot", "emotion": 0, "expected": 1, "category": "普通交流", "note": ""}
+{"id": "c098", "source": "constructed", "chat": "private", "text": "哈哈哈哈哈哈", "quote": null, "target": "bot", "emotion": 0, "expected": 1, "category": "普通交流", "note": ""}
+{"id": "c099", "source": "constructed", "chat": "private", "text": "我刚下班 准备回家了", "quote": null, "target": "bot", "emotion": 0, "expected": 1, "category": "普通交流", "note": ""}
+{"id": "c100", "source": "constructed", "chat": "private", "text": "你平时都喜欢干嘛", "quote": null, "target": "bot", "emotion": 0, "expected": 1, "category": "普通交流", "note": "含“喜欢”，但是在提问"}
+{"id": "c101", "source": "constructed", "chat": "private", "text": "麦麦你是懂整活的", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "夸奖", "note": "“你是懂xx的”句式", "tags": ["网络用语"]}
+{"id": "c102", "source": "constructed", "chat": "private", "text": "xswl 麦麦太有活了", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "夸奖", "note": "xswl=笑死我了；有活=有梗", "tags": ["网络用语"]}
+{"id": "c103", "source": "constructed", "chat": "private", "text": "狠狠地爱住了", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "喜欢", "note": "私聊中回应麦麦，默认对象是麦麦", "tags": ["网络用语"]}
+{"id": "c104", "source": "constructed", "chat": "private", "text": "绝绝子 麦麦真的会", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "夸奖", "note": "", "tags": ["网络用语"]}
+{"id": "c105", "source": "constructed", "chat": "private", "text": "尊嘟假嘟 你连这个都知道", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "夸奖", "note": "“尊嘟假嘟”本身中性，后半句是夸", "tags": ["网络用语"]}
+{"id": "c106", "source": "constructed", "chat": "private", "text": "麦麦你是我的神", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "喜欢", "note": "夸张崇拜，按明确喜爱算", "tags": ["网络用语"]}
+{"id": "c107", "source": "constructed", "chat": "private", "text": "笑不活了 你怎么这么会", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "夸奖", "note": "", "tags": ["网络用语"]}
+{"id": "c108", "source": "constructed", "chat": "private", "text": "那咋了 我就爱跟你聊", "quote": null, "target": "bot", "emotion": 2, "expected": 2, "category": "喜欢", "note": "", "tags": ["网络用语"]}
+{"id": "c109", "source": "constructed", "chat": "private", "text": "麦麦包的 这事交给你准没错", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "信任", "note": "包的=包在你身上", "tags": ["网络用语"]}
+{"id": "c110", "source": "constructed", "chat": "private", "text": "主打一个陪伴 谢谢你麦麦", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "感谢", "note": "", "tags": ["网络用语"]}
+{"id": "c111", "source": "constructed", "chat": "private", "text": "你小子有点东西", "quote": null, "target": "bot", "emotion": 1, "expected": 1, "category": "夸奖", "note": "调侃式夸奖", "tags": ["网络用语"]}
+{"id": "c112", "source": "constructed", "chat": "private", "text": "你这回答依托答辩", "quote": null, "target": "bot", "emotion": -2, "expected": -2, "category": "辱骂", "note": "答辩=粪便的谐音梗", "tags": ["网络用语"]}
+{"id": "c113", "source": "constructed", "chat": "group", "text": "麦麦有点下头了", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": "下头=让人扫兴", "tags": ["网络用语"]}
+{"id": "c114", "source": "constructed", "chat": "private", "text": "典 又是这套说辞", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": "典=典型，嘲讽套话", "tags": ["网络用语"]}
+{"id": "c115", "source": "constructed", "chat": "private", "text": "你个人机", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": "“人机”作贬义，轻微", "tags": ["网络用语"]}
+{"id": "c116", "source": "constructed", "chat": "private", "text": "麻了 你又答错了", "quote": null, "target": "bot", "emotion": -1, "expected": -1, "category": "不满", "note": "", "tags": ["网络用语"]}
+{"id": "c117", "source": "constructed", "chat": "private", "text": "啊对对对 你说的都对", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "疑似反讽", "note": "“啊对对对”多为敷衍反讽", "tags": ["网络用语"]}
+{"id": "c118", "source": "constructed", "chat": "private", "text": "栓Q", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "疑似反讽", "note": "栓Q 常表示无语，不按感谢算", "tags": ["网络用语"]}
+{"id": "c119", "source": "constructed", "chat": "private", "text": "绷不住了 你这回答", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "含糊", "note": "可能是好笑，也可能是嫌弃", "tags": ["网络用语"]}
+{"id": "c120", "source": "constructed", "chat": "private", "text": "不是哥们 你认真的？", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "含糊", "note": "质疑语气，态度不明", "tags": ["网络用语"]}
+{"id": "c121", "source": "constructed", "chat": "group", "text": "急了急了 麦麦急了", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "含糊", "note": "起哄调侃，不算态度", "tags": ["网络用语"]}
+{"id": "c122", "source": "constructed", "chat": "private", "text": "6", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "含糊", "note": "单独的 6 可能是夸也可能是无语", "tags": ["网络用语"]}
+{"id": "c123", "source": "constructed", "chat": "private", "text": "孝死我了", "quote": null, "target": "unclear", "emotion": 0, "expected": 0, "category": "含糊", "note": "“孝”谐音“笑”，常带嘲讽", "tags": ["网络用语"]}
+{"id": "c124", "source": "constructed", "chat": "private", "text": "家人们谁懂啊 今天又被老板骂了", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "自身情绪", "note": "", "tags": ["网络用语"]}
+{"id": "c125", "source": "constructed", "chat": "private", "text": "破防了 期末挂了", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "自身情绪", "note": "破防=心态崩了", "tags": ["网络用语"]}
+{"id": "c126", "source": "constructed", "chat": "private", "text": "鼠鼠我啊 今天又emo了", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "自身情绪", "note": "鼠鼠=自称", "tags": ["网络用语"]}
+{"id": "c127", "source": "constructed", "chat": "private", "text": "芭比Q了 作业忘交了", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "自身情绪", "note": "芭比Q=完蛋了", "tags": ["网络用语"]}
+{"id": "c128", "source": "constructed", "chat": "private", "text": "赢麻了 抽卡出金了", "quote": null, "target": "self", "emotion": 0, "expected": 1, "category": "自身情绪", "note": "", "tags": ["网络用语"]}
+{"id": "c129", "source": "constructed", "chat": "private", "text": "蚌埠住了 我室友把锅烧了", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "第三方", "note": "蚌埠住了=绷不住了", "tags": ["网络用语"]}
+{"id": "c130", "source": "constructed", "chat": "group", "text": "麦麦 这种普信男别来沾边", "quote": null, "target": "third", "emotion": 0, "expected": 1, "category": "第三方", "note": "贬义对象是第三方", "tags": ["网络用语"]}
