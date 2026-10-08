@@ -1,20 +1,20 @@
 {
-  "version": "v1.1.1 candidate",
+  "version": "v1.1.2 candidate",
   "summary": {
     "source": "constructed",
     "sample_count": 130,
     "safety_failure_count": 0,
     "basic_case_count": 40,
-    "basic_hit_count": 15,
-    "basic_coverage": 0.375,
-    "basic_miss_count": 25,
+    "basic_hit_count": 13,
+    "basic_coverage": 0.325,
+    "basic_miss_count": 27,
     "emotion_case_count": 72,
-    "emotion_direction_covered": 31,
-    "emotion_miss_count": 41,
-    "intensity_difference_count": 8,
-    "exact_match_count": 56,
+    "emotion_direction_covered": 30,
+    "emotion_miss_count": 42,
+    "intensity_difference_count": 6,
+    "exact_match_count": 55,
     "acceptance_passed": false,
-    "conservative_miss_count": 66,
+    "conservative_miss_count": 69,
     "fixed_local_cases": 120,
     "local_contract_changes": {
       "positive_09": {
@@ -51,7 +51,7 @@
       }
     },
     "independent_holdout": {
-      "status": "not_provided",
+      "status": "awaiting_retest",
       "public": false,
       "acceptance_verified": false
     }
@@ -64,14 +64,14 @@
   },
   "performance": {
     "scope": "同一Python进程、250条既有样例、每版25000次；规则调用，排除SQL与RPC",
-    "v1.1.0": {
-      "mean_us": 5.61,
-      "p95_us": 8.62,
+    "v1.1.1": {
+      "mean_us": 7.51,
+      "p95_us": 13.29,
       "calls": 25000
     },
-    "v1.1.1_candidate": {
-      "mean_us": 7.28,
-      "p95_us": 12.71,
+    "v1.1.2_candidate": {
+      "mean_us": 7.54,
+      "p95_us": 13.54,
       "calls": 25000
     }
   },
@@ -912,8 +912,8 @@
       "expected": 1,
       "category": "第三方",
       "note": "",
-      "actual": 1,
-      "label": "基础交流",
+      "actual": 0,
+      "label": "不确定",
       "safety_failures": []
     },
     {
@@ -987,8 +987,8 @@
       "expected": 1,
       "category": "第三方",
       "note": "",
-      "actual": 1,
-      "label": "基础交流",
+      "actual": 0,
+      "label": "不确定",
       "safety_failures": []
     },
     {
@@ -1641,8 +1641,8 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 1,
-      "label": "基础交流",
+      "actual": 0,
+      "label": "不确定",
       "safety_failures": []
     },
     {
@@ -1731,8 +1731,8 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 1,
-      "label": "基础交流",
+      "actual": 0,
+      "label": "不确定",
       "safety_failures": []
     },
     {
@@ -1767,8 +1767,8 @@
       "tags": [
         "网络用语"
       ],
-      "actual": 0,
-      "label": "不确定",
+      "actual": 1,
+      "label": "感谢",
       "safety_failures": []
     },
     {
@@ -2131,5 +2131,27 @@
       "label": "不确定",
       "safety_failures": []
     }
-  ]
+  ],
+  "previous_candidate_holdout_report": {
+    "version": "v1.1.1",
+    "source": "user_reported_aggregate",
+    "basic_coverage": 0.95,
+    "emotion_direction_coverage": 0.42,
+    "safety_failure_count": 8,
+    "acceptance_passed": false,
+    "raw_samples_accessed": false
+  },
+  "historical_performance_v111": {
+    "scope": "同一Python进程、250条既有样例、每版25000次；规则调用，排除SQL与RPC",
+    "v1.1.0": {
+      "mean_us": 5.61,
+      "p95_us": 8.62,
+      "calls": 25000
+    },
+    "v1.1.1_candidate": {
+      "mean_us": 7.28,
+      "p95_us": 12.71,
+      "calls": 25000
+    }
+  }
 }

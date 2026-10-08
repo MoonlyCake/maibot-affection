@@ -112,6 +112,24 @@ EMOTION_WORD_RE = re.compile(
                 "滚蛋",
                 "难受",
                 "抽象",
+                "唠叨",
+                "啰嗦",
+                "啰唆",
+                "话多",
+                "废话",
+                "难听",
+                "不好听",
+                "走开",
+                "闪开",
+                "搞砸",
+                "弄砸",
+                "搞错",
+                "弄错",
+                "失误",
+                "失败",
+                "翻车",
+                "说了算",
+                "最有道理",
             },
             key=len,
             reverse=True,
@@ -119,11 +137,16 @@ EMOTION_WORD_RE = re.compile(
     )
 )
 SINGLE_EMOTION_RE = re.compile(
-    rf"(?:^|你|我|{DEGREES})(?:又|总是|一直)?(?:{DEGREES}){{0,2}}"
-    r"(?:爱|累|滚|恨|傻|笨|蠢|烦|棒)(?=$|你|了|死了|吗|么|嘛|啊|呀|呢|吧|哇|哦|啦|~|～)"
-    rf"|(?:我)?(?:{DEGREES}){{0,2}}(?:爱|恨)(?=[他她它这那小])"
+    r"(?<!可)爱(?!好|尔兰|迪生|因斯坦)|(?<!积)累(?!加|计|积)"
+    r"|(?<![打翻])滚(?!动|筒|轮|烫|珠)|恨|傻|笨|蠢|(?<!麻)烦|麻烦(?!你|您|帮|问|请)"
+    r"|(?<![棒球])棒(?!球|棒糖)"
     rf"|你(?:这样|那样|(?:刚才|刚刚|上次).{{0,12}})(?:{DEGREES}){{0,2}}好(?:的)?$"
 )
+FAILURE_RE = re.compile(r"(?:又|再次|还是).{0,16}错(?!过|觉|落|位)")
+RESULT_RE = re.compile(
+    r"[这那](?:(?:道|个|份|条)?(?:题|答案|回答|回复|结果|代码|计算|输出|方案)|次(?=又|再次|还是|失误))"
+)
+DISMISSIVE_RE = re.compile(r"随(?:你|您)(?:便|意)|(?:走|滚|躲)远(?:点|些)|一边去")
 EVENT_RETENTION_SECONDS = 30 * 24 * 60 * 60
 OTHER_EVALUATION_RE = re.compile(
     rf"(?:[他她它]|(?:你|我|他|她)的[\w]{{1,12}}|[这那][\w]{{1,12}})(?:{DEGREES}){{0,2}}"
@@ -181,6 +204,11 @@ class IntentMatcher:
             rf"(?:[他她它这那]|作者|小[^\W\d_]).+|我(?:{DEGREES}){{0,2}}"
             rf"(?:喜欢|爱|讨厌|不喜欢|恨)(?!{target}).+"
         )
+        self.insult_re = re.compile(
+            rf"{target}(?:真是|就是|是|像)(?:一)?(?:个|条|只|头)?(?:狗|猪(?:头)?|驴|畜生|牲口)(?:东西)?"
+            r"(?=$|[吗么嘛吧啊呀呢啦了]|一样|似的|还|又|就|也)"
+        )
+        thanks_target = rf"(?:你(?:[了啊呀啦呢哦]{{0,2}}@?(?:{names_pattern}))?|@?(?:{names_pattern}))"
         self.emotion_rules = tuple(
             (re.compile(pattern), lexicon)
             for pattern, lexicon in (
@@ -194,7 +222,7 @@ class IntentMatcher:
                     HELP,
                 ),
                 (
-                    rf"(?P<target>{target})(?:真是|就是|是)?(?:个)?{DEGREE_GROUP}"
+                    rf"(?P<target>{target})(?:真是|就是|是)?(?:个)?(?:也(?=太))?{DEGREE_GROUP}"
                     rf"(?P<word>{'|'.join(sorted(EVALUATIONS, key=len, reverse=True))})",
                     EVALUATIONS,
                 ),
@@ -204,7 +232,8 @@ class IntentMatcher:
                     ATTITUDES,
                 ),
                 (
-                    rf"{DEGREE_GROUP}(?P<word>{'|'.join(sorted(THANKS, key=len, reverse=True))})(?P<target>{target})?",
+                    rf"{DEGREE_GROUP}(?P<word>{'|'.join(sorted(THANKS, key=len, reverse=True))})"
+                    rf"[了啊呀啦呢哦]{{0,2}}(?P<target>{thanks_target})?",
                     THANKS,
                 ),
                 (
@@ -338,9 +367,17 @@ class IntentMatcher:
                 or NEGATION_RE.search(clause)
                 or REFERENCE_RE.search(clause)
                 or OTHER_EVALUATION_RE.fullmatch(clause)
+                or FAILURE_RE.search(clause)
+                or DISMISSIVE_RE.search(clause)
+                or self.insult_re.search(clause)
             )
             blocked |= signal
-            if self.other_re.fullmatch(clause) and "你" not in clause and not self.name_re.search(clause):
+            if (
+                self.other_re.fullmatch(clause)
+                and "你" not in clause
+                and not self.name_re.search(clause)
+                and not RESULT_RE.match(clause)
+            ):
                 turning = False
                 continue
             if match is None:
