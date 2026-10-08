@@ -8,7 +8,7 @@
 
 ## 安装
 
-GitHub 当前稳定版为 **v1.0.3**。本目录的 **v1.1.0 规则版**供试用；使用对应安装 ZIP，或克隆 `codex/conservative-affection` 分支体验新评分器。直接克隆当前主分支仍安装稳定版。
+当前版本为 **v1.1.0**。从 [Release](https://github.com/MoonlyCake/maibot-affection/releases/tag/v1.1.0) 下载安装 ZIP，或直接克隆主分支。升级覆盖插件代码后重载或重启 MaiBot，原配置与好感度数据库会继续使用。
 
 1. 下载 Release 安装 ZIP，将其中的 `affection/` 复制到 MaiBot 的 `plugins/`；如果下载 GitHub 源码 ZIP，将解压后的仓库根目录重命名为 `affection` 再复制。最终得到 `plugins/affection/plugin.py` 和 `plugins/affection/_manifest.json`。
 2. 启动或重载 MaiBot，在 WebUI 插件管理中启用 **麦麦好感度**。首次加载由 Runner 根据配置模型生成 `config.toml`，可在 WebUI 调整配置。
