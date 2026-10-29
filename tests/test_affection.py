@@ -638,6 +638,60 @@ class PluginTests(unittest.IsolatedAsyncioTestCase):
             return await self.plugin.query_affection(routed, routed["session_id"])
         return None
 
+    async def test_explicit_all_day_silent_group_preserves_learning_without_reply(self) -> None:
+        key = "chat.reply_timing.talk_value_rules"
+        enabled = "chat.reply_timing.enable_talk_value_rules"
+        rule = {"platform": "qq", "item_id": "g1", "rule_type": "group", "time": "*", "value": 0}
+        self.host.config[enabled] = True
+        self.host.config[key] = [rule]
+        query = message("我的好感度是多少", group=True, at="12345")
+        before = self.host.count("llm.generate")
+        self.assertEqual(await self.plugin.record_interaction(query), {"action": "continue"})
+        self.assertEqual(await self.plugin.query_affection(query, "stream-1"), (True, None, 0))
+        self.assertEqual(self.host.count("llm.generate"), before)
+        self.assertEqual(self.host.count("send.hybrid"), 0)
+
+        # 停用规则、不同群、私聊与同优先级的先行非零规则不应被误静音。
+        self.host.config[enabled] = False
+        self.assertFalse(await self.plugin._silent_learning_group(query))
+        self.host.config[enabled] = True
+        other = message("我的好感度是多少", group=True, at="12345")
+        other["message_info"]["group_info"]["group_id"] = "g2"
+        self.assertFalse(await self.plugin._silent_learning_group(other))
+        self.assertFalse(await self.plugin._silent_learning_group(message("我的好感度是多少")))
+        self.host.config[key] = [{**rule, "value": 0.5}, rule]
+        self.assertFalse(await self.plugin._silent_learning_group(query))
+
+    async def test_switch_to_silent_while_query_is_in_flight(self) -> None:
+        enabled = "chat.reply_timing.enable_talk_value_rules"
+        rules = "chat.reply_timing.talk_value_rules"
+        rule = {"platform": "qq", "item_id": "g1", "rule_type": "group", "time": "*", "value": 0}
+        original_record = self.plugin.store.record
+
+        async def record_then_silence(*args, **kwargs):
+            result = await original_record(*args, **kwargs)
+            self.host.config[enabled] = True
+            self.host.config[rules] = [rule]
+            return result
+
+        query = message("我的好感度是多少", group=True, at="12345", event="before-generation")
+        with patch.object(self.plugin.store, "record", side_effect=record_then_silence):
+            self.assertEqual(await self.plugin.query_affection(query, "stream-1"), (True, None, 2))
+            await self.finish_replies()
+        self.assertEqual(self.host.count("llm.generate"), 0)
+        self.assertEqual(self.host.count("send.hybrid"), 0)
+
+        self.host.config[enabled] = False
+        self.host.generate_gate = asyncio.Event()
+        query = message("我的好感度是多少", group=True, at="12345", user="u2", event="during-generation")
+        self.assertEqual(await self.plugin.query_affection(query, "stream-1"), (True, None, 2))
+        await asyncio.wait_for(self.host.generate_started.wait(), timeout=1)
+        self.host.config[enabled] = True
+        self.host.generate_gate.set()
+        await self.finish_replies()
+        self.assertEqual(self.host.count("llm.generate"), 1)
+        self.assertEqual(self.host.count("send.hybrid"), 0)
+
     async def test_both_query_commands_are_registered_and_do_not_overlap(self) -> None:
         commands = {
             component["name"]: component for component in self.plugin.get_components() if component["type"] == "COMMAND"
