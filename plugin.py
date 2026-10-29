@@ -697,6 +697,23 @@ class AffectionPlugin(MaiBotPlugin):
             for segment in message["raw_message"]
         )
 
+    async def _silent_learning_group(self, message: dict[str, Any]) -> bool:
+        """尊重明确配置的 QQ 群全天零频规则，保留入站消息供核心学习。"""
+        group = message["message_info"].get("group_info") or {}
+        group_id = str(group.get("group_id") or "")
+        if message["platform"] != "qq" or not group_id:
+            return False
+        if not await self.ctx.config.get("chat.reply_timing.enable_talk_value_rules", False):
+            return False
+        rules = await self.ctx.config.get("chat.reply_timing.talk_value_rules", [])
+        # 与宿主相同：相同优先级的规则先出现者生效；精确 QQ 群全天规则优先于其他规则。
+        for rule in rules:
+            if (isinstance(rule, dict) and str(rule.get("platform", "")).strip() == "qq"
+                    and str(rule.get("item_id", "")).strip() == group_id
+                    and rule.get("rule_type") == "group" and str(rule.get("time", "")).strip() == "*"):
+                return float(rule.get("value", 0)) == 0
+        return False
+
     @HookHandler(
         "chat.receive.after_process",
         name="affection_record",
@@ -713,6 +730,8 @@ class AffectionPlugin(MaiBotPlugin):
         body, named, punctuated = self.matcher.body(text)
         addressed = self._addressed(message, named)
         if self.matcher.query(body):
+            if await self._silent_learning_group(message):
+                return {"action": "continue"}
             if settings.group_requires_address and not addressed and body != "/affection":
                 return {"action": "continue"}
             # 排除 Host 的引用描述、@ 展示位置和 ASR 包装，保留用户当前这句话。
@@ -787,6 +806,8 @@ class AffectionPlugin(MaiBotPlugin):
     async def _start_query(self, message: dict[str, Any], stream_id: str) -> tuple[bool, None, int]:
         if not self.config.plugin.enabled:
             return True, None, 0
+        if await self._silent_learning_group(message):
+            return True, None, 0
         text = self._message_text(message)
         if len(text) > 180:
             return True, None, 0
@@ -811,6 +832,8 @@ class AffectionPlugin(MaiBotPlugin):
     async def _reply(self, message: dict[str, Any], stream_id: str, kind: str) -> None:
         try:
             async with asyncio.timeout(self.config.reply.timeout_seconds):
+                if await self._silent_learning_group(message):
+                    return
                 info = message["message_info"]["user_info"]
                 result = await self.store.record(
                     message["platform"],
@@ -845,6 +868,9 @@ class AffectionPlugin(MaiBotPlugin):
                     f"{self._persona}\n{direction}"
                     "用第一人称回复提问者，保持人物性格，1～2句，80字以内，仅输出聊天正文。"
                 )
+                # 群规则可能在后台任务排队或记分期间更新。
+                if await self._silent_learning_group(message):
+                    return
                 result = await self.ctx.llm.generate(
                     prompt=[
                         {"role": "system", "content": prompt},
@@ -856,6 +882,8 @@ class AffectionPlugin(MaiBotPlugin):
                 )
                 if not result["success"] or not result["response"].strip():
                     self.ctx.logger.warning("好感度回复生成失败，stream_id=%s", stream_id)
+                    return
+                if await self._silent_learning_group(message):
                     return
                 sent = await self.ctx.send.hybrid(
                     [
